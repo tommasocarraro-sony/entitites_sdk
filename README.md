@@ -1,6 +1,8 @@
-# Ollama Entities Library
+# Entities SDK
 
-The **Ollama Entities** library is a state management and control API built on top of the [Ollama Python library](https://github.com/ollama/ollama-python). It offers an integrated API framework for developing projects that interact with open-source LLMs using the [Ollama](https://github.com/ollama) library. This enables rapid and flexible deployment of advanced features such as conversation management, [function calling](/docs/function_calling.md), [code interpretation](/docs/function_calling.md), and more through easy-to-use API endpoints.
+The **Entities** SDK provides a programmatic interface to the  [Entities AI API](https://github.com/frankie336/entities_api). 
+It offers an integrated API framework for developing projects that interact with open-source LLMs using the [Ollama](https://github.com/ollama) library. 
+This enables rapid and flexible deployment of advanced features such as conversation management, [function calling](/docs/function_calling.md), [code interpretation](/docs/function_calling.md), and more through easy-to-use API endpoints.
 
 This documentation assumes a working knowledge of the [Ollama](https://github.com/ollama) library.
 
