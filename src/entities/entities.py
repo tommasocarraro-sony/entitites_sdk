@@ -1,53 +1,49 @@
-# entities/clients/code_execution_client.py
 import os
-from contextlib import contextmanager
-from typing import Any, Dict, Optional, Generator
+from typing import Any, Dict, Optional
 
 from dotenv import load_dotenv
 from ollama import Client as OllamaAPIClient
 
-from src.entities.clients.client_actions_client import ClientActionService
-from src.entities.clients.client_assistant_client import ClientAssistantService
-from src.entities.clients.client_message_client import ClientMessageService
-from src.entities.clients.client_run_client import ClientRunService
-from src.entities.clients.client_sandbox_client import SandboxClientService
-from src.entities.clients.client_thread_client import ThreadService
-from src.entities.clients.client_tool_client import ClientToolService
-from src.entities.clients.client_user_client import UserService
-from src.entities.dependencies import SessionLocal
-from src.entities.services.logging_service import LoggingUtility
+# Use relative imports for modules within your package.
+from .clients.actions import ClientActionService
+from .clients.assistant import ClientAssistantService
+from .clients.message import ClientMessageService
+from .clients.run import ClientRunService
+from .clients.sandbox import SandboxClientService
+from .clients.thread import ThreadService
+from .clients.tool_client import ClientToolClient as ClientToolService
+from .clients.client_user_client import UserService
+from .clients.inference import ClientInferenceService
+from .clients.synchronous_inference_stream import SynchronousInferenceStream
+from .services.logging_service import LoggingUtility
 
-from src.entities import VectorStoreService
-
-# Load environment variables from .env file
+# Load environment variables from .env file.
 load_dotenv()
 
-# Initialize logging utility
+# Initialize logging utility.
 logging_utility = LoggingUtility()
 
 
-class Client:
+class Entities:
     def __init__(
-            self,
-            base_url: Optional[str] = None,
-            api_key: Optional[str] = None,
-            available_functions: Optional[Dict[str, Any]] = None
+        self,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        available_functions: Optional[Dict[str, Any]] = None
     ):
         """
         Initialize the main client with configuration.
-        Optionally, a configuration object could be injected here
-        to decouple from environment variables for better testability.
+        Optionally, a configuration object can be injected to decouple from environment variables.
         """
         self.base_url = base_url or os.getenv('ASSISTANTS_BASE_URL', 'http://localhost:9000/')
         self.api_key = api_key or os.getenv('API_KEY', 'your_api_key')
 
-        # Initialize the Ollama API client
+        # Initialize the Ollama API client.
         self.ollama_client: OllamaAPIClient = OllamaAPIClient()
-        self._session_factory = SessionLocal
 
-        logging_utility.info("Client initialized with base_url: %s", self.base_url)
+        logging_utility.info("Entities initialized with base_url: %s", self.base_url)
 
-        # Lazy initialization caches for service instances
+        # Lazy initialization caches for service instances.
         self._user_service: Optional[UserService] = None
         self._assistant_service: Optional[ClientAssistantService] = None
         self._tool_service: Optional[ClientToolService] = None
@@ -56,7 +52,8 @@ class Client:
         self._run_service: Optional[ClientRunService] = None
         self._action_service: Optional[ClientActionService] = None
         self._sandbox_service: Optional[SandboxClientService] = None
-        self._vector_service: Optional[VectorStoreService] = None
+        self._inference_service: Optional[ClientInferenceService] = None
+        self._synchronous_inference_stream: Optional[SynchronousInferenceStream] = None  # Added property
 
     @property
     def user_service(self) -> UserService:
@@ -100,39 +97,26 @@ class Client:
             self._action_service = ClientActionService()
         return self._action_service
 
-    # The Vector Database docker container, QDart has some
-    # sort of bug or incorrect implementation
-    # preventing traffic through its client
-    # traversing FastAPI(). This is  special
-    # Case direct call to qdrant/qdrant
-    @property
-    def vector_service(self) -> VectorStoreService:
-        if self._vector_service is None:
-            session = self._session_factory()
-            self._vector_service = VectorStoreService()
-        return self._vector_service
-
     @property
     def sandbox_service(self) -> SandboxClientService:
         if self._sandbox_service is None:
             self._sandbox_service = SandboxClientService(base_url=self.base_url, api_key=self.api_key)
         return self._sandbox_service
 
-    @contextmanager
-    def vector_session(self) -> Generator[VectorStoreService, None, None]:
-        """Context manager for explicit session control"""
-        session = self._session_factory()
-        try:
-            service = VectorStoreService(session)
-            yield service
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
+    @property
+    def inference_service(self) -> ClientInferenceService:
+        """
+        Exposes the asynchronous inference client via the public interface.
+        """
+        if self._inference_service is None:
+            self._inference_service = ClientInferenceService(base_url=self.base_url, api_key=self.api_key)
+        return self._inference_service
 
-    def close(self):
-        """Clean up resources explicitly"""
-        if self._vector_service:
-            self._vector_service.db.close()
+    @property
+    def synchronous_inference_stream(self) -> SynchronousInferenceStream:
+        """
+        Exposes the synchronous inference stream wrapper via the public interface.
+        """
+        if self._synchronous_inference_stream is None:
+            self._synchronous_inference_stream = SynchronousInferenceStream(self.inference_service)
+        return self._synchronous_inference_stream

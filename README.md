@@ -1,10 +1,37 @@
 # Entities SDK
 
 The **Entities** SDK provides a programmatic interface to the  [Entities AI API](https://github.com/frankie336/entities_api). 
-It offers an integrated API framework for developing projects that interact with open-source LLMs using the [Ollama](https://github.com/ollama) library. 
-This enables rapid and flexible deployment of advanced features such as conversation management, [function calling](/docs/function_calling.md), [code interpretation](/docs/function_calling.md), and more through easy-to-use API endpoints.
+It offers an integrated API framework for developing projects that interact with open-source LLMs.
+It aggregates inference calls to multiple providers as well as local using the [Ollama](https://github.com/ollama) library. 
+
+This enables rapid and flexible deployment of advanced features such as conversation management, 
+[function calling](/docs/function_calling.md), [code interpretation](/docs/function_calling.md), and more through easy-to-use API endpoints.
 
 This documentation assumes a working knowledge of the [Ollama](https://github.com/ollama) library.
+
+
+
+## Supported Inference Providers: 
+
+| Provider                                       | Type                        |
+|------------------------------------------------|-----------------------------|
+| [Ollama](https://github.com/ollama)            | **Local** (Self-Hosted)     |
+| [DeepSeek](https://platform.deepseek.com/)     | **Cloud** (Open-Source)     |
+| [Hyperbolic](https://hyperbolic.xyz/)          | **Cloud** (Proprietary)     |
+| [OpenAI](https://platform.openai.com/)         | **Cloud** (Proprietary)     |
+| [together.ai](https://www.together.ai/)        | **Cloud** (Aggregated)      |
+| [MS Azure Foundry](https://azure.microsoft.com) | **Cloud** (Enterprise)      |
+
+
+## Why Entities API
+
+The landscape of AI inference has become both competitive and diverse. Every month, a new AI lab or vertical provider announces a breakthrough or releases a new API offering. No single provider meets all requirements or interests, as each one offers a different API with its own keys, schemas, endpoints, and features. This diversity has quickly made AI inference cumbersome.
+
+Entities API aggregates the core features and methodologies of all providers into one unified platform.
+
+## State Management
+
+Advanced applications and integrations in LLMs require state management
 
 
 ## Supported Models
@@ -32,16 +59,16 @@ tbc
 import os
 
 from dotenv import load_dotenv
-from src.entities import InferenceFactory, Client
+from src.entities import InferenceFactory, Entities
 
 
 def initialize_services():
     """
     Initializes the necessary services by loading environment variables
-    and creating an Client instance.
+    and creating an Entities instance.
 
     Returns:
-        Client: An instance of Client.
+        Entities: An instance of Entities.
 
     Raises:
         EnvironmentError: If required environment variables are missing.
@@ -57,9 +84,9 @@ def initialize_services():
         print(f"Missing required environment variables: {', '.join(missing_vars)}")
         raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
-    # Initialize Client
-    client = Client()
-    print("Client initialized.")
+    # Initialize Entities
+    client = Entities()
+    print("Entities initialized.")
 
     return client
 
@@ -69,7 +96,7 @@ def create_entities(client):
     Creates the necessary entities: user, assistant, thread, message, and run.
 
     Args:
-        client (Client): The Ollama client instance.
+        client (Entities): The Ollama client instance.
 
     Returns:
         tuple: A tuple containing user, assistant, thread, message, and run objects.
@@ -112,7 +139,7 @@ def conversation(client, thread_id, user_message, user_id, selected_model, infer
     Initiates a conversation and processes the response in chunks.
 
     Args:
-        client (Client): The Ollama client instance.
+        client (Entities): The Ollama client instance.
         thread_id (str): The ID of the thread.
         user_message (str): The user's message.
         user_id (str): The ID of the user.

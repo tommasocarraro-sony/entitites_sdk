@@ -4,8 +4,24 @@ from enum import Enum
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field, ConfigDict
 from pydantic import validator
+from enum import Enum as PyEnum
 
-from src.entities import StatusEnum
+
+class StatusEnum(PyEnum):
+    deleted = "deleted"
+    active = "active"               # Added this member
+    queued = "queued"
+    in_progress = "in_progress"
+    pending_action = "action_required"
+    completed = "completed"
+    failed = "failed"
+    cancelling = "cancelling"
+    cancelled = "cancelled"
+    pending = "pending"
+    processing = "processing"
+    expired = "expired"
+    retrying = "retrying"
+
 
 
 class UserBase(BaseModel):
@@ -619,4 +635,26 @@ class SearchExplanation(BaseModel):
 
 class EnhancedVectorSearchResult(VectorStoreSearchResult):
     explanation: Optional[SearchExplanation] = None
+
+
+class ProviderEnum(str, Enum):
+    openai = "openai"
+    deepseek = "deepseek"
+    hyperbolic = "Hyperbolic"
+    togetherai = "togetherai"
+    local = "local"
+
+class StreamRequest(BaseModel):
+    provider: ProviderEnum = Field(..., description="The inference provider")
+    model: str = Field(..., description="The model to use for inference")
+    api_key: Optional[str] = Field(None, description="Optional API key for third-party providers")
+    thread_id: str = Field(..., description="Thread identifier")
+    message_id: str = Field(..., description="Message identifier")
+    run_id: str = Field(..., description="Run identifier")
+    assistant_id: str = Field(..., description="Assistant identifier")
+
+
+
+
+
 

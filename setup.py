@@ -8,11 +8,12 @@ setup(
     version="0.1.0",
     author="Francis N.",
     author_email="francis.neequaye@projectdavid.co.uk",
-    description="A FastAPI-based API for managing AI entities",
+    description="SDK for managing AI entities",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/frankie336/entities_api",
-    packages=find_packages(include=["entities", "entities.*"]),  # Simplified package inclusion
+    url="https://github.com/frankie336/entitites_sdk",
+    package_dir={"": "src"},  # Tells setuptools that packages live under src/
+    packages=find_packages(where="src", include=["entities", "entities.*"]),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -27,49 +28,13 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=[
-        "anyio",
-        "certifi",
-        "h11",
-        "httpcore",
-        "httpx",
-        "idna",
-        "sniffio",
-        "fastapi",
-        "databases",
-        "uvicorn",
-        "sqlalchemy",
-        "pydantic",
-        "starlette",
-        "asgiref",
-        "click",
-        "pymysql",
-        "cryptography",
-        "typing_extensions",
-        "python-dotenv",
-        "alembic",
-        "ollama",
-        "typer",
-        "Flask",
-        "Flask-SQLAlchemy",  # Corrected to canonical PyPI name
-        "spacy",
-        "weasel",
-        "groq",
-        "openai",
-        "azure-ai-inference",
-        "together",
-        "tenacity"
-        "pdfplumber",
-        "sentence_transformers",
-        "validators",
-        "websockets"
-
-
-
+        "anyio", "certifi", "h11", "httpcore", "httpx", "idna", "sniffio",
+        "fastapi", "databases", "uvicorn", "sqlalchemy",
+        "pydantic", "starlette", "asgiref", "click", "pymysql", "cryptography",
+        "typing_extensions", "python-dotenv",
     ],
     extras_require={
-        "dev": [
-            "pytest",  # Moved here to avoid redundancy
-        ],
+        "dev": ["pytest"],
     },
     entry_points={
         "console_scripts": [

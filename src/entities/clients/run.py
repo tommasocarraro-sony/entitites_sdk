@@ -2,9 +2,9 @@ import httpx
 import time
 from typing import List, Dict, Any, Optional
 from pydantic import ValidationError
-from src.entities.services.identifier_service import IdentifierService
-from src.entities.services.logging_service import LoggingUtility
-from src.entities.schemas import Run, RunStatusUpdate, RunReadDetailed  # Import the relevant Pydantic models
+from ..services.identifier_service import IdentifierService
+from ..services.logging_service import LoggingUtility
+from ..schemas import Run, RunStatusUpdate, RunReadDetailed
 
 # Initialize logging utility
 logging_utility = LoggingUtility()

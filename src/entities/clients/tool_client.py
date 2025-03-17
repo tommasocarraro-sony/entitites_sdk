@@ -1,13 +1,13 @@
 import httpx
 from typing import List, Optional
 from pydantic import ValidationError
-from src.entities.schemas import ToolCreate, ToolRead, ToolUpdate
-from src.entities.services.logging_service import LoggingUtility
+from ..schemas import ToolCreate, ToolRead, ToolUpdate
+from ..services.logging_service import LoggingUtility
 
 logging_utility = LoggingUtility()
 
 
-class ClientToolService:
+class ClientToolClient:
     def __init__(self, base_url="http://localhost:9000/",  api_key=None):
         self.base_url = base_url
         self.api_key = api_key

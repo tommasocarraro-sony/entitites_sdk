@@ -1,28 +1,5 @@
-from src.entities.clients.client import Client
+# src/entities/__init__.py
 
-#from entities.services.event_handler import EntitiesEventHandler
+from .entities import Entities
 
-from ollama._types import (
-    GenerateResponse,
-    ChatResponse,
-    ProgressResponse,
-    Message,
-    Options,
-    RequestError,
-    ResponseError,
-)
-
-__all__ = [
-    'GenerateResponse',
-    'ChatResponse',
-    'ProgressResponse',
-    'Message',
-    'Options',
-    'RequestError',
-    'ResponseError',
-    'Client',
-    #'EntitiesEventHandler'
-
-]
-
-_client = Client()
+__all__ = ['Entities']

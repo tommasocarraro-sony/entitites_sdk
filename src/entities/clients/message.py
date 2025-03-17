@@ -1,11 +1,11 @@
-# clients/client_message_client.py
+# clients/message.py
 from typing import List, Dict, Any, Optional
 
 import httpx
 from pydantic import ValidationError
 
-from src.entities.schemas import MessageCreate, MessageRead, MessageUpdate  # Import the relevant Pydantic models
-from src.entities.services.logging_service import LoggingUtility
+from ..schemas import MessageCreate, MessageRead, MessageUpdate  # Import the relevant Pydantic models
+from ..services.logging_service import LoggingUtility
 
 # Initialize logging utility
 logging_utility = LoggingUtility()
@@ -20,7 +20,10 @@ class ClientMessageService:
         logging_utility.info("ClientMessageService initialized with base_url: %s", self.base_url)
 
     def create_message(self, thread_id: str, content: str, assistant_id: str,
-                       role: str = 'user', meta_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                       role: str = 'user', meta_data: Optional[Dict[str, Any]] = None) -> MessageRead:
+        """
+        Create a new message in the database and return it as a MessageRead Pydantic model.
+        """
         if meta_data is None:
             meta_data = {}
 
@@ -33,13 +36,24 @@ class ClientMessageService:
         }
 
         logging_utility.info("Creating message for thread_id: %s, role: %s", thread_id, role)
+
         try:
-            validated_data = MessageCreate(**message_data)  # Validate data using Pydantic model
+            # Validate the input data using Pydantic model
+            validated_data = MessageCreate(**message_data)
+
+            # Send the request to create the message
             response = self.client.post("/v1/messages", json=validated_data.dict())
             response.raise_for_status()
+
+            # Parse the response as JSON
             created_message = response.json()
+
+            # Log the successful creation
             logging_utility.info("Message created successfully with id: %s", created_message.get('id'))
-            return created_message
+
+            # Convert the response dictionary to a MessageRead Pydantic model
+            return MessageRead(**created_message)
+
         except ValidationError as e:
             logging_utility.error("Validation error: %s", e.json())
             raise ValueError(f"Validation error: {e}")
@@ -49,7 +63,6 @@ class ClientMessageService:
         except Exception as e:
             logging_utility.error("An error occurred while creating message: %s", str(e))
             raise
-
 
     def retrieve_message(self, message_id: str) -> MessageRead:
         logging_utility.info("Retrieving message with id: %s", message_id)

@@ -1,4 +1,6 @@
-__all__ = ['Client']
+from .entities import Entities
+
+__all__ = ['Entities']
 
 try:
     from setuptools_scm import get_version
