@@ -11,12 +11,12 @@ from ..services.logging_service import LoggingUtility
 logging_utility = LoggingUtility()
 
 
-class ThreadService:
+class ThreadClient:
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url
         self.api_key = api_key
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
-        logging_utility.info("ThreadService initialized with base_url: %s", self.base_url)
+        logging_utility.info("ThreadClient initialized with base_url: %s", self.base_url)
 
     def create_user(self, name: str) -> UserRead:
         logging_utility.info("Creating user with name: %s", name)
@@ -143,29 +143,28 @@ class ThreadService:
             logging_utility.error("An error occurred while listing threads: %s", str(e))
             raise
 
-    def delete_thread(self, thread_id: str) -> None:
+    def delete_thread(self, thread_id: str) -> bool:
         logging_utility.info("Deleting thread with id: %s", thread_id)
         try:
             response = self.client.delete(f"/v1/threads/{thread_id}")
             response.raise_for_status()
             logging_utility.info("Thread deleted successfully")
+            return True  # Explicitly return True on success
         except httpx.HTTPStatusError as e:
-            logging_utility.error("HTTP error occurred while deleting thread: %s", str(e))
+            logging_utility.error(f"HTTP error occurred while deleting thread: {str(e)}")
+            if e.response.status_code == 404:
+                return False  # Explicit when thread not found
             raise
-        except Exception as e:
-            logging_utility.error("An error occurred while deleting thread: %s", str(e))
-            raise
-
 
 if __name__ == "__main__":
     # Replace with your actual base URL and API key
     base_url = "http://localhost:9000"
     api_key = "your_api_key"
 
-    logging_utility.info("Starting ThreadService test")
+    logging_utility.info("Starting ThreadClient test")
 
     # Initialize the client
-    thread_service = ThreadService(base_url, api_key)
+    thread_service = ThreadClient(base_url, api_key)
 
     try:
         # Create users
@@ -198,4 +197,4 @@ if __name__ == "__main__":
         logging_utility.info("Retrieved updated thread: %s", updated_retrieved_thread.meta_data)
 
     except Exception as e:
-        logging_utility.error("An error occurred during ThreadService test: %s", str(e))
+        logging_utility.error("An error occurred during ThreadClient test: %s", str(e))

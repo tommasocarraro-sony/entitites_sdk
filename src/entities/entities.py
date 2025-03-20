@@ -10,7 +10,7 @@ from .clients.assistant import ClientAssistantService
 from .clients.message import ClientMessageService
 from .clients.run import ClientRunService
 from .clients.sandbox import SandboxClientService
-from .clients.thread import ThreadService
+from .clients.thread import ThreadClient
 from .clients.tool_client import ClientToolClient as ClientToolService
 from .clients.client_user_client import UserService
 from .clients.inference import ClientInferenceService
@@ -47,7 +47,7 @@ class Entities:
         self._user_service: Optional[UserService] = None
         self._assistant_service: Optional[ClientAssistantService] = None
         self._tool_service: Optional[ClientToolService] = None
-        self._thread_service: Optional[ThreadService] = None
+        self._thread_service: Optional[ThreadClient] = None
         self._message_service: Optional[ClientMessageService] = None
         self._run_service: Optional[ClientRunService] = None
         self._action_service: Optional[ClientActionService] = None
@@ -74,9 +74,9 @@ class Entities:
         return self._tool_service
 
     @property
-    def thread_service(self) -> ThreadService:
+    def thread_service(self) -> ThreadClient:
         if self._thread_service is None:
-            self._thread_service = ThreadService(base_url=self.base_url, api_key=self.api_key)
+            self._thread_service = ThreadClient(base_url=self.base_url, api_key=self.api_key)
         return self._thread_service
 
     @property
