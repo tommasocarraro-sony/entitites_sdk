@@ -130,11 +130,11 @@ if __name__ == "__main__":
         logging_utility.info("Retrieved assistants for user %s: %s", user_id, assistants)
 
         # Update the user (optional)
-        # updated_user = user_service.update_user(user_id, name="Updated Test User")
+        # updated_user = user.update_user(user_id, name="Updated Test User")
         # logging_utility.info("Updated user: %s", updated_user)
 
         # Delete the user (optional)
-        # delete_result = user_service.delete_user(user_id)
+        # delete_result = user.delete_user(user_id)
         # logging_utility.info("Delete result: %s", delete_result)
 
     except Exception as e:

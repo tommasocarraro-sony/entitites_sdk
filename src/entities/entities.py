@@ -56,55 +56,50 @@ class Entities:
         self._synchronous_inference_stream: Optional[SynchronousInferenceStream] = None  # Added property
 
     @property
-    def user_service(self) -> UserService:
+    def user(self) -> UserService:
         if self._user_service is None:
             self._user_service = UserService(base_url=self.base_url, api_key=self.api_key)
         return self._user_service
 
     @property
-    def assistant_service(self) -> ClientAssistantService:
+    def assistant(self) -> ClientAssistantService:
         if self._assistant_service is None:
             self._assistant_service = ClientAssistantService(base_url=self.base_url, api_key=self.api_key)
         return self._assistant_service
 
     @property
-    def tool_service(self) -> ClientToolService:
+    def tool(self) -> ClientToolService:
         if self._tool_service is None:
             self._tool_service = ClientToolService()
         return self._tool_service
 
     @property
-    def thread_service(self) -> ThreadClient:
+    def threads(self) -> ThreadClient:
         if self._thread_service is None:
             self._thread_service = ThreadClient(base_url=self.base_url, api_key=self.api_key)
         return self._thread_service
 
     @property
-    def message_service(self) -> ClientMessageService:
+    def messages(self) -> ClientMessageService:
         if self._message_service is None:
             self._message_service = ClientMessageService(base_url=self.base_url, api_key=self.api_key)
         return self._message_service
 
     @property
-    def run_service(self) -> ClientRunService:
+    def runs(self) -> ClientRunService:
         if self._run_service is None:
             self._run_service = ClientRunService()
         return self._run_service
 
     @property
-    def action_service(self) -> ClientActionService:
+    def actions(self) -> ClientActionService:
         if self._action_service is None:
             self._action_service = ClientActionService()
         return self._action_service
 
-    @property
-    def sandbox_service(self) -> SandboxClientService:
-        if self._sandbox_service is None:
-            self._sandbox_service = SandboxClientService(base_url=self.base_url, api_key=self.api_key)
-        return self._sandbox_service
 
     @property
-    def inference_service(self) -> ClientInferenceService:
+    def inference(self) -> ClientInferenceService:
         """
         Exposes the asynchronous inference client via the public interface.
         """
@@ -113,10 +108,10 @@ class Entities:
         return self._inference_service
 
     @property
-    def synchronous_inference_stream(self) -> SynchronousInferenceStream:
+    def inference_stream(self) -> SynchronousInferenceStream:
         """
         Exposes the synchronous inference stream wrapper via the public interface.
         """
         if self._synchronous_inference_stream is None:
-            self._synchronous_inference_stream = SynchronousInferenceStream(self.inference_service)
+            self._synchronous_inference_stream = SynchronousInferenceStream(self.inference)
         return self._synchronous_inference_stream
