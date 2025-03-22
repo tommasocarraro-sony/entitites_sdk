@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 import httpx
 from pydantic import ValidationError
 
-from ..schemas import MessageCreate, MessageRead, MessageUpdate  # Import the relevant Pydantic models
+from ..schemas.schemas import MessageCreate, MessageRead, MessageUpdate  # Import the relevant Pydantic models
 from ..services.logging_service import LoggingUtility
 from dotenv import load_dotenv
 

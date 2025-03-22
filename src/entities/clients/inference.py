@@ -4,7 +4,7 @@ import time
 from typing import Optional, AsyncGenerator
 import httpx
 from pydantic import ValidationError
-from ..schemas import StreamRequest
+from ..schemas.schemas import StreamRequest
 from ..services.logging_service import LoggingUtility
 import asyncio
 from dotenv import load_dotenv

@@ -14,6 +14,7 @@ from .clients.synchronous_inference_stream import SynchronousInferenceStream
 from .clients.threads import ThreadsClient
 from .clients.tools import ToolsClient
 from .clients.users import UsersClient
+from .clients.files import FileClient
 from .services.logging_service import LoggingUtility
 
 # Load environment variables from .env file.
@@ -43,66 +44,70 @@ class Entities:
         logging_utility.info("Entities initialized with base_url: %s", self.base_url)
 
         # Lazy initialization caches for service instances.
-        self._user_service: Optional[UsersClient] = None
-        self._assistant_service: Optional[AssistantsClient] = None
+        self._users_client: Optional[UsersClient] = None
+        self._assistants_client: Optional[AssistantsClient] = None
         self._tool_service: Optional[ToolsClient] = None
         self._thread_service: Optional[ThreadsClient] = None
-        self._message_service: Optional[MessagesClient] = None
-        self._run_service: Optional[RunsClient] = None
-        self._action_service: Optional[ActionsClient] = None
-        self._inference_service: Optional[InferenceClient] = None
+        self._messages_client: Optional[MessagesClient] = None
+        self._runs_client: Optional[RunsClient] = None
+        self._actions_client: Optional[ActionsClient] = None
+        self._inference_client: Optional[InferenceClient] = None
+        self._file_client: Optional[FileClient] = None
+
         self._synchronous_inference_stream: Optional[SynchronousInferenceStream] = None  # Added property
 
     @property
-    def user_service(self) -> UsersClient:
-        if self._user_service is None:
-            self._user_service = UsersClient(base_url=self.base_url, api_key=self.api_key)
-        return self._user_service
+    def users(self) -> UsersClient:
+        if self._users_client is None:
+            self._users_client = UsersClient(base_url=self.base_url, api_key=self.api_key)
+        return self._users_client
 
     @property
-    def assistant_service(self) -> AssistantsClient:
-        if self._assistant_service is None:
-            self._assistant_service = AssistantsClient(base_url=self.base_url, api_key=self.api_key)
-        return self._assistant_service
+    def assistants(self) -> AssistantsClient:
+        if self._assistants_client is None:
+            self._assistants_client = AssistantsClient(base_url=self.base_url, api_key=self.api_key)
+        return self._assistants_client
 
     @property
-    def tool_service(self) -> ToolsClient:
+    def tools(self) -> ToolsClient:
         if self._tool_service is None:
             self._tool_service = ToolsClient()
         return self._tool_service
 
     @property
-    def thread_service(self) -> ThreadsClient:
+    def threads(self) -> ThreadsClient:
         if self._thread_service is None:
             self._thread_service = ThreadsClient(base_url=self.base_url, api_key=self.api_key)
         return self._thread_service
 
     @property
-    def message_service(self) -> MessagesClient:
-        if self._message_service is None:
-            self._message_service = MessagesClient(base_url=self.base_url, api_key=self.api_key)
-        return self._message_service
+    def messages(self) -> MessagesClient:
+        if self._messages_client is None:
+            self._messages_client = MessagesClient(base_url=self.base_url, api_key=self.api_key)
+        return self._messages_client
+
 
     @property
-    def run_service(self) -> RunsClient:
-        if self._run_service is None:
-            self._run_service = RunsClient()
-        return self._run_service
+    def runs(self) -> RunsClient:
+        if self._runs_client is None:
+            self._runs_client = RunsClient(base_url=self.base_url, api_key=self.api_key)
+        return self._runs_client
+
 
     @property
-    def action_service(self) -> ActionsClient:
-        if self._action_service is None:
-            self._action_service = ActionsClient()
-        return self._action_service
+    def actions(self) -> ActionsClient:
+        if self._actions_client is None:
+            self._actions_client = ActionsClient()
+        return self._actions_client
 
     @property
-    def inference_service(self) -> InferenceClient:
+    def inference(self) -> InferenceClient:
         """
         Exposes the asynchronous inference client via the public interface.
         """
-        if self._inference_service is None:
-            self._inference_service = InferenceClient(base_url=self.base_url, api_key=self.api_key)
-        return self._inference_service
+        if self._inference_client is None:
+            self._inference_client = InferenceClient(base_url=self.base_url, api_key=self.api_key)
+        return self._inference_client
 
     @property
     def synchronous_inference_stream(self) -> SynchronousInferenceStream:
@@ -110,5 +115,12 @@ class Entities:
         Exposes the synchronous inference stream wrapper via the public interface.
         """
         if self._synchronous_inference_stream is None:
-            self._synchronous_inference_stream = SynchronousInferenceStream(self.inference_service)
+            self._synchronous_inference_stream = SynchronousInferenceStream(self.inference)
         return self._synchronous_inference_stream
+
+    @property
+    def files(self) -> FileClient:
+        if self._file_client is None:
+            self._file_client = FileClient()
+        return self._file_client
+

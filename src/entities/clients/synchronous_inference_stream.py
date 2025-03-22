@@ -5,8 +5,8 @@ class SynchronousInferenceStream:
     _GLOBAL_LOOP = asyncio.new_event_loop()
     asyncio.set_event_loop(_GLOBAL_LOOP)
 
-    def __init__(self, inference_service):
-        self.inference_service = inference_service
+    def __init__(self, inference):
+        self.inference_client = inference
         self.user_id = None
         self.thread_id = None
         self.assistant_id = None
@@ -22,7 +22,7 @@ class SynchronousInferenceStream:
 
     def stream_chunks(self, provider: str, model: str, timeout_per_chunk: float = 10.0):
         async def _stream_chunks_async():
-            async for chunk in self.inference_service.stream_inference_response(
+            async for chunk in self.inference_client.stream_inference_response(
                 provider=provider, model=model,
                 thread_id=self.thread_id, message_id=self.message_id,
                 run_id=self.run_id, assistant_id=self.assistant_id
@@ -54,4 +54,4 @@ class SynchronousInferenceStream:
 
     def close(self):
         with suppress(Exception):
-            self.inference_service.close()
+            self.inference_client.close()

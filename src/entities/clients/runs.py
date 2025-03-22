@@ -6,7 +6,7 @@ import httpx
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from ..schemas import Run, RunStatusUpdate, RunReadDetailed
+from ..schemas.schemas import Run, RunStatusUpdate, RunReadDetailed
 from ..services.identifier_service import IdentifierService
 from ..services.logging_service import LoggingUtility
 
