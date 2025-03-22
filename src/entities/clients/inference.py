@@ -14,7 +14,7 @@ load_dotenv()
 logging_utility = LoggingUtility()
 
 
-class ClientInferenceService:
+class InferenceClient:
     """
     Client-side service for interacting with the completions endpoint.
 
@@ -30,7 +30,7 @@ class ClientInferenceService:
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
         self.client = httpx.Client(base_url=base_url, headers=headers)
-        logging_utility.info("ClientInferenceService initialized with base_url: %s", self.base_url)
+        logging_utility.info("InferenceClient initialized with base_url: %s", self.base_url)
 
     def create_completion_sync(
             self,

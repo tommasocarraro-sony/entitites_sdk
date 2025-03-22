@@ -14,13 +14,13 @@ load_dotenv()
 logging_utility = LoggingUtility()
 
 
-class ClientMessageService:
+class MessagesClient:
     def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
         self.base_url = base_url
         self.api_key = api_key
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
         self.message_chunks: Dict[str, List[str]] = {}  # Temporary storage for message chunks
-        logging_utility.info("ClientMessageService initialized with base_url: %s", self.base_url)
+        logging_utility.info("MessagesClient initialized with base_url: %s", self.base_url)
 
     def create_message(self, thread_id: str, content: str, assistant_id: str,
                        role: str = 'user', meta_data: Optional[Dict[str, Any]] = None) -> MessageRead:

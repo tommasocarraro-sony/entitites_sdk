@@ -13,7 +13,7 @@ load_dotenv()
 logging_utility = LoggingUtility()
 
 
-class ClientToolClient:
+class ToolsClient:
 
     def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
 

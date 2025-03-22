@@ -15,11 +15,11 @@ load_dotenv()
 # Initialize logging
 logging_utility = LoggingUtility()
 
-class ClientActionService:
+class ActionsClient:
     def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
         """Initialize with base URL and API key for authentication."""
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
-        logging_utility.info("ClientActionService initialized with base_url: %s", base_url)
+        logging_utility.info("ActionsClient initialized with base_url: %s", base_url)
 
     def create_action(self, tool_name: str, run_id: str, function_args: Optional[Dict[str, Any]] = None,
                       expires_at: Optional[datetime] = None) -> ActionRead:

@@ -5,15 +5,15 @@ from dotenv import load_dotenv
 from ollama import Client as OllamaAPIClient
 
 # Use relative imports for modules within your package.
-from .clients.actions import ClientActionService
+from .clients.actions import ActionsClient
 from .clients.assistants import AssistantsClient
-from .clients.messages import ClientMessageService
-from .clients.runs import ClientRunService
-from .clients.threads import ThreadsClient
-from .clients.tools import ClientToolClient as ClientToolService
-from .clients.users import UsersClient
-from .clients.inference import ClientInferenceService
+from .clients.inference import InferenceClient
+from .clients.messages import MessagesClient
+from .clients.runs import RunsClient
 from .clients.synchronous_inference_stream import SynchronousInferenceStream
+from .clients.threads import ThreadsClient
+from .clients.tools import ToolsClient
+from .clients.users import UsersClient
 from .services.logging_service import LoggingUtility
 
 # Load environment variables from .env file.
@@ -45,12 +45,12 @@ class Entities:
         # Lazy initialization caches for service instances.
         self._user_service: Optional[UsersClient] = None
         self._assistant_service: Optional[AssistantsClient] = None
-        self._tool_service: Optional[ClientToolService] = None
+        self._tool_service: Optional[ToolsClient] = None
         self._thread_service: Optional[ThreadsClient] = None
-        self._message_service: Optional[ClientMessageService] = None
-        self._run_service: Optional[ClientRunService] = None
-        self._action_service: Optional[ClientActionService] = None
-        self._inference_service: Optional[ClientInferenceService] = None
+        self._message_service: Optional[MessagesClient] = None
+        self._run_service: Optional[RunsClient] = None
+        self._action_service: Optional[ActionsClient] = None
+        self._inference_service: Optional[InferenceClient] = None
         self._synchronous_inference_stream: Optional[SynchronousInferenceStream] = None  # Added property
 
     @property
@@ -66,9 +66,9 @@ class Entities:
         return self._assistant_service
 
     @property
-    def tool_service(self) -> ClientToolService:
+    def tool_service(self) -> ToolsClient:
         if self._tool_service is None:
-            self._tool_service = ClientToolService()
+            self._tool_service = ToolsClient()
         return self._tool_service
 
     @property
@@ -78,30 +78,30 @@ class Entities:
         return self._thread_service
 
     @property
-    def message_service(self) -> ClientMessageService:
+    def message_service(self) -> MessagesClient:
         if self._message_service is None:
-            self._message_service = ClientMessageService(base_url=self.base_url, api_key=self.api_key)
+            self._message_service = MessagesClient(base_url=self.base_url, api_key=self.api_key)
         return self._message_service
 
     @property
-    def run_service(self) -> ClientRunService:
+    def run_service(self) -> RunsClient:
         if self._run_service is None:
-            self._run_service = ClientRunService()
+            self._run_service = RunsClient()
         return self._run_service
 
     @property
-    def action_service(self) -> ClientActionService:
+    def action_service(self) -> ActionsClient:
         if self._action_service is None:
-            self._action_service = ClientActionService()
+            self._action_service = ActionsClient()
         return self._action_service
 
     @property
-    def inference_service(self) -> ClientInferenceService:
+    def inference_service(self) -> InferenceClient:
         """
         Exposes the asynchronous inference client via the public interface.
         """
         if self._inference_service is None:
-            self._inference_service = ClientInferenceService(base_url=self.base_url, api_key=self.api_key)
+            self._inference_service = InferenceClient(base_url=self.base_url, api_key=self.api_key)
         return self._inference_service
 
     @property
