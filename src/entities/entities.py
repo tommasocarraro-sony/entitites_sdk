@@ -50,7 +50,6 @@ class Entities:
         self._message_service: Optional[ClientMessageService] = None
         self._run_service: Optional[ClientRunService] = None
         self._action_service: Optional[ClientActionService] = None
-        self._sandbox_service: Optional[SandboxClientService] = None
         self._inference_service: Optional[ClientInferenceService] = None
         self._synchronous_inference_stream: Optional[SynchronousInferenceStream] = None  # Added property
 
