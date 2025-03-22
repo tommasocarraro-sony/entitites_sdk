@@ -84,6 +84,37 @@ tbc
 # Import the public SDK interface.
 from entities import Entities
 
+client = Entities()
+user = client.user.create_user(name='test_user')
+
+thread = client.threads.create_thread(participant_ids=[user.id])
+
+assistant = client.assistant.create_assistant()
+
+
+message = client.messages.create_message(
+    thread_id=thread.id,
+    role='user',
+    content='Hello, This is a test')
+
+run = client.runs.create_run(assistant_id=assistant.id,
+                             thread_id=thread.id,
+
+                             )
+
+
+try:
+    completion = client.inference.create_completion(
+        provider="Hyperbolic",
+        model="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        thread_id=thread.id,
+        message_id=message['id'],
+        run_id=run.id,
+        assistant_id=assistant.id
+    )
+    pprint.pprint(completion)
+finally:
+    pass
 
 
 

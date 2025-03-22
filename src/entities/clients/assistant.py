@@ -15,7 +15,7 @@ class ClientAssistantService:
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
         logging_utility.info("ClientAssistantService initialized with base_url: %s", self.base_url)
 
-    def create_assistant(self, model: str, name: str = "", description: str = "", instructions: str = "",
+    def create_assistant(self, model: str="", name: str = "", description: str = "", instructions: str = "",
                          meta_data: Dict[str, Any] = None,
                          top_p: float = 1.0, temperature: float = 1.0, response_format: str = "auto",
                          assistant_id: Optional[str] = None) -> AssistantRead:

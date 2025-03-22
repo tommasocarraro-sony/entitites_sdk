@@ -534,7 +534,7 @@ class AssistantRead(BaseModel):
     created_at: int
     name: str
     description: Optional[str]
-    model: str
+    model: Optional[str] = None
     instructions: Optional[str]
     meta_data: Optional[Dict[str, Any]] = None
     top_p: float
