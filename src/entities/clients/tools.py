@@ -1,14 +1,22 @@
-import httpx
+import os
 from typing import List, Optional
+
+import httpx
+from dotenv import load_dotenv
 from pydantic import ValidationError
+
 from ..schemas import ToolCreate, ToolRead, ToolUpdate
 from ..services.logging_service import LoggingUtility
+
+load_dotenv()
 
 logging_utility = LoggingUtility()
 
 
 class ClientToolClient:
-    def __init__(self, base_url="http://localhost:9000/",  api_key=None):
+
+    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
+
         self.base_url = base_url
         self.api_key = api_key
         self.client = httpx.Client(

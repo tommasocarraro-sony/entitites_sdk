@@ -1,22 +1,25 @@
+import os
 from typing import List, Dict, Any, Optional
 
 import httpx
+from dotenv import load_dotenv
 from pydantic import ValidationError
 
 from ..schemas import UserCreate, UserRead, ThreadCreate, ThreadRead, ThreadUpdate, ThreadIds, \
     ThreadReadDetailed
 from ..services.logging_service import LoggingUtility
 
+load_dotenv()
 # Initialize logging utility
 logging_utility = LoggingUtility()
 
 
-class ThreadClient:
-    def __init__(self, base_url: str, api_key: str):
+class ThreadsClient:
+    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
         self.base_url = base_url
         self.api_key = api_key
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
-        logging_utility.info("ThreadClient initialized with base_url: %s", self.base_url)
+        logging_utility.info("ThreadsClient initialized with base_url: %s", self.base_url)
 
     def create_user(self, name: str) -> UserRead:
         logging_utility.info("Creating user with name: %s", name)
@@ -156,45 +159,3 @@ class ThreadClient:
                 return False  # Explicit when thread not found
             raise
 
-if __name__ == "__main__":
-    # Replace with your actual base URL and API key
-    base_url = "http://localhost:9000"
-    api_key = "your_api_key"
-
-    logging_utility.info("Starting ThreadClient test")
-
-    # Initialize the client
-    thread_service = ThreadClient(base_url, api_key)
-
-    try:
-        # Create users
-        user1 = thread_service.create_user(name="User 1")
-        user2 = thread_service.create_user(name="User 2")
-
-        # Get user IDs
-        user1_id = user1.id
-        user2_id = user2.id
-
-        # Create a thread
-        new_thread = thread_service.create_thread(participant_ids=[user1_id, user2_id], meta_data={"topic": "Test Thread"})
-
-        # Retrieve the thread ID from the response
-        thread_id = new_thread.id
-
-        logging_utility.info("Created thread with ID: %s", thread_id)
-
-        # Optionally, retrieve the created thread to verify
-        retrieved_thread = thread_service.retrieve_thread(thread_id)
-        logging_utility.info("Retrieved thread: %s", retrieved_thread)
-
-        # Update the thread metadata
-        updated_thread = thread_service.update_thread_metadata(thread_id, new_metadata={"topic": "Updated Topic"})
-
-        logging_utility.info("Updated thread metadata: %s", updated_thread.meta_data)
-
-        # Optionally, retrieve the updated thread to verify changes
-        updated_retrieved_thread = thread_service.retrieve_thread(thread_id)
-        logging_utility.info("Retrieved updated thread: %s", updated_retrieved_thread.meta_data)
-
-    except Exception as e:
-        logging_utility.error("An error occurred during ThreadClient test: %s", str(e))

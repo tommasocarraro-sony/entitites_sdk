@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
@@ -15,7 +16,7 @@ load_dotenv()
 logging_utility = LoggingUtility()
 
 class ClientActionService:
-    def __init__(self, base_url="http://localhost:9000/", api_key=None):
+    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
         """Initialize with base URL and API key for authentication."""
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
         logging_utility.info("ClientActionService initialized with base_url: %s", base_url)

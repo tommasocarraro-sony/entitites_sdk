@@ -6,13 +6,12 @@ from ollama import Client as OllamaAPIClient
 
 # Use relative imports for modules within your package.
 from .clients.actions import ClientActionService
-from .clients.assistant import ClientAssistantService
-from .clients.message import ClientMessageService
-from .clients.run import ClientRunService
-from .clients.sandbox import SandboxClientService
-from .clients.thread import ThreadClient
-from .clients.tool_client import ClientToolClient as ClientToolService
-from .clients.client_user_client import UserService
+from .clients.assistants import AssistantsClient
+from .clients.messages import ClientMessageService
+from .clients.runs import ClientRunService
+from .clients.threads import ThreadsClient
+from .clients.tools import ClientToolClient as ClientToolService
+from .clients.users import UsersClient
 from .clients.inference import ClientInferenceService
 from .clients.synchronous_inference_stream import SynchronousInferenceStream
 from .services.logging_service import LoggingUtility
@@ -44,10 +43,10 @@ class Entities:
         logging_utility.info("Entities initialized with base_url: %s", self.base_url)
 
         # Lazy initialization caches for service instances.
-        self._user_service: Optional[UserService] = None
-        self._assistant_service: Optional[ClientAssistantService] = None
+        self._user_service: Optional[UsersClient] = None
+        self._assistant_service: Optional[AssistantsClient] = None
         self._tool_service: Optional[ClientToolService] = None
-        self._thread_service: Optional[ThreadClient] = None
+        self._thread_service: Optional[ThreadsClient] = None
         self._message_service: Optional[ClientMessageService] = None
         self._run_service: Optional[ClientRunService] = None
         self._action_service: Optional[ClientActionService] = None
@@ -56,50 +55,49 @@ class Entities:
         self._synchronous_inference_stream: Optional[SynchronousInferenceStream] = None  # Added property
 
     @property
-    def user(self) -> UserService:
+    def user_service(self) -> UsersClient:
         if self._user_service is None:
-            self._user_service = UserService(base_url=self.base_url, api_key=self.api_key)
+            self._user_service = UsersClient(base_url=self.base_url, api_key=self.api_key)
         return self._user_service
 
     @property
-    def assistant(self) -> ClientAssistantService:
+    def assistant_service(self) -> AssistantsClient:
         if self._assistant_service is None:
-            self._assistant_service = ClientAssistantService(base_url=self.base_url, api_key=self.api_key)
+            self._assistant_service = AssistantsClient(base_url=self.base_url, api_key=self.api_key)
         return self._assistant_service
 
     @property
-    def tool(self) -> ClientToolService:
+    def tool_service(self) -> ClientToolService:
         if self._tool_service is None:
             self._tool_service = ClientToolService()
         return self._tool_service
 
     @property
-    def threads(self) -> ThreadClient:
+    def thread_service(self) -> ThreadsClient:
         if self._thread_service is None:
-            self._thread_service = ThreadClient(base_url=self.base_url, api_key=self.api_key)
+            self._thread_service = ThreadsClient(base_url=self.base_url, api_key=self.api_key)
         return self._thread_service
 
     @property
-    def messages(self) -> ClientMessageService:
+    def message_service(self) -> ClientMessageService:
         if self._message_service is None:
             self._message_service = ClientMessageService(base_url=self.base_url, api_key=self.api_key)
         return self._message_service
 
     @property
-    def runs(self) -> ClientRunService:
+    def run_service(self) -> ClientRunService:
         if self._run_service is None:
             self._run_service = ClientRunService()
         return self._run_service
 
     @property
-    def actions(self) -> ClientActionService:
+    def action_service(self) -> ClientActionService:
         if self._action_service is None:
             self._action_service = ClientActionService()
         return self._action_service
 
-
     @property
-    def inference(self) -> ClientInferenceService:
+    def inference_service(self) -> ClientInferenceService:
         """
         Exposes the asynchronous inference client via the public interface.
         """
@@ -108,10 +106,10 @@ class Entities:
         return self._inference_service
 
     @property
-    def inference_stream(self) -> SynchronousInferenceStream:
+    def synchronous_inference_stream(self) -> SynchronousInferenceStream:
         """
         Exposes the synchronous inference stream wrapper via the public interface.
         """
         if self._synchronous_inference_stream is None:
-            self._synchronous_inference_stream = SynchronousInferenceStream(self.inference)
+            self._synchronous_inference_stream = SynchronousInferenceStream(self.inference_service)
         return self._synchronous_inference_stream

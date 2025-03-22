@@ -1,17 +1,22 @@
-import httpx
+import os
 import time
 from typing import List, Dict, Any, Optional
+
+import httpx
+from dotenv import load_dotenv
 from pydantic import ValidationError
+
+from ..schemas import Run, RunStatusUpdate, RunReadDetailed
 from ..services.identifier_service import IdentifierService
 from ..services.logging_service import LoggingUtility
-from ..schemas import Run, RunStatusUpdate, RunReadDetailed
 
+load_dotenv()
 # Initialize logging utility
 logging_utility = LoggingUtility()
 
 
 class ClientRunService:
-    def __init__(self, base_url="http://localhost:9000/", api_key=None):
+    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
         self.base_url = base_url
         self.api_key = api_key
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})

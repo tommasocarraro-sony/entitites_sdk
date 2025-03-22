@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from typing import Optional, AsyncGenerator
 import httpx
@@ -6,6 +7,9 @@ from pydantic import ValidationError
 from ..schemas import StreamRequest
 from ..services.logging_service import LoggingUtility
 import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging_utility = LoggingUtility()
 
@@ -18,8 +22,8 @@ class ClientInferenceService:
       - create_completion_sync(...): a synchronous wrapper that blocks until the response is aggregated.
       - stream_inference_response(...): an async generator for real-time streaming.
     """
+    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
 
-    def __init__(self, base_url: str = "http://localhost:9000", api_key: Optional[str] = None):
         self.base_url = base_url
         self.api_key = api_key
         headers = {}

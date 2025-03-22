@@ -1,4 +1,5 @@
-# clients/message.py
+# clients/messages.py
+import os
 from typing import List, Dict, Any, Optional
 
 import httpx
@@ -6,13 +7,15 @@ from pydantic import ValidationError
 
 from ..schemas import MessageCreate, MessageRead, MessageUpdate  # Import the relevant Pydantic models
 from ..services.logging_service import LoggingUtility
+from dotenv import load_dotenv
 
+load_dotenv()
 # Initialize logging utility
 logging_utility = LoggingUtility()
 
 
 class ClientMessageService:
-    def __init__(self, base_url="http://localhost:9000/", api_key=None):
+    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
         self.base_url = base_url
         self.api_key = api_key
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})

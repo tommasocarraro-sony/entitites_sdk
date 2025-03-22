@@ -1,19 +1,24 @@
-import httpx
+import os
 from typing import List, Dict, Any, Optional
-from pydantic import ValidationError
-from ..services.logging_service import LoggingUtility
-from ..schemas import AssistantCreate, AssistantRead, AssistantUpdate
 
+import httpx
+from dotenv import load_dotenv
+from pydantic import ValidationError
+
+from ..schemas import AssistantCreate, AssistantRead, AssistantUpdate
+from ..services.logging_service import LoggingUtility
+
+load_dotenv()
 # Initialize logging utility
 logging_utility = LoggingUtility()
 
 
-class ClientAssistantService:
-    def __init__(self, base_url="http://localhost:9000/", api_key=None):
+class AssistantsClient:
+    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
         self.base_url = base_url
         self.api_key = api_key
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
-        logging_utility.info("ClientAssistantService initialized with base_url: %s", self.base_url)
+        logging_utility.info("AssistantsClient initialized with base_url: %s", self.base_url)
 
     def create_assistant(self, model: str="", name: str = "", description: str = "", instructions: str = "",
                          meta_data: Dict[str, Any] = None,

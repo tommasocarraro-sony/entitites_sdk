@@ -1,19 +1,24 @@
-import httpx
-from ..services.logging_service import LoggingUtility
-from pydantic import ValidationError
-from ..schemas import UserRead, UserCreate, UserUpdate, UserDeleteResponse, AssistantRead
+import os
 from typing import List
 
+import httpx
+from dotenv import load_dotenv
+from pydantic import ValidationError
+
+from ..schemas import UserRead, UserCreate, UserUpdate, UserDeleteResponse, AssistantRead
+from ..services.logging_service import LoggingUtility
+
+load_dotenv()
 # Initialize logging utility
 logging_utility = LoggingUtility()
 
 
-class UserService:
-    def __init__(self, base_url: str, api_key: str):
+class UsersClient:
+    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
         self.base_url = base_url
         self.api_key = api_key
         self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
-        logging_utility.info("UserService initialized with base_url: %s", self.base_url)
+        logging_utility.info("UsersClient initialized with base_url: %s", self.base_url)
 
     def create_user(self, name: str) -> UserRead:
         logging_utility.info("Creating user with name: %s", name)
@@ -105,37 +110,3 @@ class UserService:
             raise
 
 
-if __name__ == "__main__":
-    # Replace with your actual base URL and API key
-    base_url = "http://localhost:9000"
-    api_key = "your_api_key"
-
-    logging_utility.info("Starting UserService test")
-
-    # Initialize the client
-    user_service = UserService(base_url, api_key)
-
-    try:
-        # Create a user
-        new_user = user_service.create_user(name="Test User")
-        user_id = new_user.id
-        logging_utility.info("Created user with ID: %s", user_id)
-
-        # Retrieve the user
-        retrieved_user = user_service.retrieve_user(user_id)
-        logging_utility.info("Retrieved user: %s", retrieved_user)
-
-        # List assistants for the user
-        assistants = user_service.list_assistants_by_user(user_id)
-        logging_utility.info("Retrieved assistants for user %s: %s", user_id, assistants)
-
-        # Update the user (optional)
-        # updated_user = user.update_user(user_id, name="Updated Test User")
-        # logging_utility.info("Updated user: %s", updated_user)
-
-        # Delete the user (optional)
-        # delete_result = user.delete_user(user_id)
-        # logging_utility.info("Delete result: %s", delete_result)
-
-    except Exception as e:
-        logging_utility.error("An error occurred during UserService test: %s", str(e))
