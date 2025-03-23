@@ -1,3 +1,4 @@
+import io
 import os
 import time
 import mimetypes
@@ -181,4 +182,52 @@ class FileClient:
             raise
         except Exception as e:
             logging_utility.error("An error occurred while deleting the file: %s", str(e))
+            raise
+
+    def download_file_as_object(self, file_id: str) -> io.BytesIO:
+        """
+        Retrieve file content as a file-like object (BytesIO).
+        """
+        try:
+            # Endpoint returns raw file content
+            response = self.client.get(f"/v1/uploads/{file_id}/object")
+            response.raise_for_status()
+            return io.BytesIO(response.content)
+        except httpx.HTTPStatusError as e:
+            logging_utility.error("HTTP error in download_file_as_object: %s", str(e))
+            raise
+        except Exception as e:
+            logging_utility.error("Unexpected error in download_file_as_object: %s", str(e))
+            raise
+
+    def get_signed_url(self, file_id: str) -> str:
+        """
+        Retrieve a signed URL for the file.
+        """
+        try:
+            response = self.client.get(f"/v1/uploads/{file_id}/signed-url")
+            response.raise_for_status()
+            data = response.json()
+            return data.get("signed_url")
+        except httpx.HTTPStatusError as e:
+            logging_utility.error("HTTP error in get_signed_url: %s", str(e))
+            raise
+        except Exception as e:
+            logging_utility.error("Unexpected error in get_signed_url: %s", str(e))
+            raise
+
+    def get_file_as_base64(self, file_id: str) -> str:
+        """
+        Retrieve the file content as a BASE64-encoded string.
+        """
+        try:
+            response = self.client.get(f"/v1/uploads/{file_id}/base64")
+            response.raise_for_status()
+            data = response.json()
+            return data.get("base64")
+        except httpx.HTTPStatusError as e:
+            logging_utility.error("HTTP error in get_file_as_base64: %s", str(e))
+            raise
+        except Exception as e:
+            logging_utility.error("Unexpected error in get_file_as_base64: %s", str(e))
             raise
