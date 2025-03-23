@@ -119,7 +119,7 @@ class FileClient:
             logging_utility.error("An error occurred while uploading file: %s", str(e))
             raise
 
-    def get_file_by_id(self, file_id: str) -> FileResponse:
+    def retrieve_file(self, file_id: str) -> FileResponse:
         """
         Retrieve file metadata by ID.
 
@@ -153,4 +153,32 @@ class FileClient:
             raise
         except Exception as e:
             logging_utility.error("An error occurred while retrieving file: %s", str(e))
+            raise
+
+    def delete_file(self, file_id: str) -> bool:
+        """
+        Delete a file by its ID from the server.
+
+        Args:
+            file_id: The ID of the file to delete.
+
+        Returns:
+            bool: True if the file was deleted successfully, False if it was not found.
+        """
+        logging_utility.info("Attempting to delete file with ID: %s", file_id)
+
+        try:
+            response = self.client.delete(f"/v1/uploads/{file_id}")
+            response.raise_for_status()
+
+            # Assuming the API returns a raw boolean in the response body.
+            deletion_result = response.json()
+            logging_utility.info("File deletion result for ID %s: %s", file_id, deletion_result)
+            return deletion_result
+
+        except httpx.HTTPStatusError as e:
+            logging_utility.error("HTTP error occurred while deleting the file: %s", str(e))
+            raise
+        except Exception as e:
+            logging_utility.error("An error occurred while deleting the file: %s", str(e))
             raise
