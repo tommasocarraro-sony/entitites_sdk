@@ -123,9 +123,6 @@ finally:
 Whilst it involves a little more effort, adding state management to distinct parts of the LLM/User interaction life cycle brings significant benefits. By pragmatically interacting with each stage, you can unlock an @OpenAI type feature set with minimal additional coding.
 
 
-
-
-
 ## Documentation
 
   [Assistants](/docs/assistants.md)
@@ -145,3 +142,8 @@ Whilst it involves a little more effort, adding state management to distinct par
   [Users](/docs/users.md)
   
   [Vector Store](/docs/vector_store.md)
+
+
+
+
+
