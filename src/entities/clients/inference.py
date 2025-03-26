@@ -2,15 +2,16 @@ import json
 import os
 import time
 from typing import Optional, AsyncGenerator
+
+import asyncio
 import httpx
 from pydantic import ValidationError
-from ..schemas.schemas import StreamRequest
-from ..services.logging_service import LoggingUtility
-import asyncio
 from dotenv import load_dotenv
 
-load_dotenv()
+from ..schemas.schemas import StreamRequest
+from ..services.logging_service import LoggingUtility
 
+load_dotenv()
 logging_utility = LoggingUtility()
 
 
@@ -22,14 +23,21 @@ class InferenceClient:
       - create_completion_sync(...): a synchronous wrapper that blocks until the response is aggregated.
       - stream_inference_response(...): an async generator for real-time streaming.
     """
-    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
 
+    def __init__(self, base_url: str, api_key: Optional[str] = None):
+        """
+        Initialize the InferenceClient with a base URL and an optional API key.
+
+        Args:
+            base_url (str): The base URL for the inference service.
+            api_key (Optional[str]): The API key for authentication.
+        """
         self.base_url = base_url
         self.api_key = api_key
         headers = {}
-        if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
-        self.client = httpx.Client(base_url=base_url, headers=headers)
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        self.client = httpx.Client(base_url=self.base_url, headers=headers)
         logging_utility.info("InferenceClient initialized with base_url: %s", self.base_url)
 
     def create_completion_sync(
@@ -67,8 +75,7 @@ class InferenceClient:
 
         logging_utility.info("Sending completions request (sync wrapper): %s", validated_payload.dict())
 
-        # Use the asynchronous streaming endpoint and aggregate its output.
-        async def aggregate():
+        async def aggregate() -> str:
             final_text = ""
             async for chunk in self.stream_inference_response(
                     provider=provider,
@@ -78,12 +85,11 @@ class InferenceClient:
                     run_id=run_id,
                     assistant_id=assistant_id,
                     user_content=user_content,
-                    api_key=api_key):
-                # Here we assume each chunk is a dict.
+                    api_key=api_key
+            ):
                 final_text += chunk.get("content", "")
             return final_text
 
-        # Run the aggregation in a background thread
         loop = asyncio.new_event_loop()
         try:
             asyncio.set_event_loop(loop)
@@ -91,7 +97,6 @@ class InferenceClient:
         finally:
             loop.close()
 
-        # Construct the completions response
         completions_response = {
             "id": f"chatcmpl-{run_id}",
             "object": "chat.completion",

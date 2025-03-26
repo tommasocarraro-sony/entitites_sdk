@@ -53,8 +53,7 @@ class Entities:
         self._actions_client: Optional[ActionsClient] = None
         self._inference_client: Optional[InferenceClient] = None
         self._file_client: Optional[FileClient] = None
-
-        self._synchronous_inference_stream: Optional[SynchronousInferenceStream] = None  # Added property
+        self._synchronous_inference_stream: Optional[SynchronousInferenceStream] = None
 
     @property
     def users(self) -> UsersClient:
@@ -71,7 +70,7 @@ class Entities:
     @property
     def tools(self) -> ToolsClient:
         if self._tool_service is None:
-            self._tool_service = ToolsClient()
+            self._tool_service = ToolsClient(base_url=self.base_url, api_key=self.api_key)
         return self._tool_service
 
     @property
@@ -86,34 +85,26 @@ class Entities:
             self._messages_client = MessagesClient(base_url=self.base_url, api_key=self.api_key)
         return self._messages_client
 
-
     @property
     def runs(self) -> RunsClient:
         if self._runs_client is None:
             self._runs_client = RunsClient(base_url=self.base_url, api_key=self.api_key)
         return self._runs_client
 
-
     @property
     def actions(self) -> ActionsClient:
         if self._actions_client is None:
-            self._actions_client = ActionsClient()
+            self._actions_client = ActionsClient(base_url=self.base_url, api_key=self.api_key)
         return self._actions_client
 
     @property
     def inference(self) -> InferenceClient:
-        """
-        Exposes the asynchronous inference client via the public interface.
-        """
         if self._inference_client is None:
             self._inference_client = InferenceClient(base_url=self.base_url, api_key=self.api_key)
         return self._inference_client
 
     @property
     def synchronous_inference_stream(self) -> SynchronousInferenceStream:
-        """
-        Exposes the synchronous inference stream wrapper via the public interface.
-        """
         if self._synchronous_inference_stream is None:
             self._synchronous_inference_stream = SynchronousInferenceStream(self.inference)
         return self._synchronous_inference_stream
@@ -121,6 +112,5 @@ class Entities:
     @property
     def files(self) -> FileClient:
         if self._file_client is None:
-            self._file_client = FileClient()
+            self._file_client = FileClient(base_url=self.base_url, api_key=self.api_key)
         return self._file_client
-

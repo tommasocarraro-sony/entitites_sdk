@@ -4,34 +4,40 @@ from typing import Optional, Dict, Any, List
 
 import httpx
 from dotenv import load_dotenv
+from entities_common import ValidationInterface
 from pydantic import ValidationError
 
-from ..schemas.schemas import ActionRead, ActionUpdate, ActionCreate, ActionStatus
+ent_validator = ValidationInterface()
+
 from ..services.identifier_service import IdentifierService
 from ..services.logging_service import LoggingUtility
 
 load_dotenv()
 
-# Initialize logging
 logging_utility = LoggingUtility()
 
+
 class ActionsClient:
-    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
-        """Initialize with base URL and API key for authentication."""
-        self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
-        logging_utility.info("ActionsClient initialized with base_url: %s", base_url)
+    def __init__(self, base_url: str = os.getenv("ASSISTANTS_BASE_URL", "http://localhost:9000/"), api_key: Optional[str] = None):
+        """
+        Initialize with base URL and API key for authentication.
+        """
+        self.base_url = base_url
+        self.api_key = api_key or os.getenv("API_KEY", "your_api_key")
+        self.client = httpx.Client(
+            base_url=self.base_url,
+            headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+        )
+        logging_utility.info("ActionsClient initialized with base_url: %s", self.base_url)
 
     def create_action(self, tool_name: str, run_id: str, function_args: Optional[Dict[str, Any]] = None,
-                      expires_at: Optional[datetime] = None) -> ActionRead:
+                      expires_at: Optional[datetime] = None) -> ent_validator.ActionRead:
         """Create a new action using the provided tool_name, run_id, and function_args."""
         try:
-            # Generate an action ID using the IdentifierService imported from services
             action_id = IdentifierService.generate_action_id()
-
-            # Convert expires_at to ISO 8601 string format if provided
             expires_at_iso = expires_at.isoformat() if expires_at else None
 
-            payload = ActionCreate(
+            payload = ent_validator.ActionCreate(
                 id=action_id,
                 tool_name=tool_name,
                 run_id=run_id,
@@ -43,14 +49,12 @@ class ActionsClient:
             logging_utility.debug("Payload for action creation: %s", payload)
 
             response = self.client.post("/v1/actions", json=payload)
-
             logging_utility.debug("Response Status Code: %s", response.status_code)
             logging_utility.debug("Response Body: %s", response.text)
-
             response.raise_for_status()
 
             response_data = response.json()
-            validated_action = ActionRead(**response_data)
+            validated_action = ent_validator.ActionRead(**response_data)
             logging_utility.info("Action created successfully with ID: %s", action_id)
             return validated_action
 
@@ -61,7 +65,7 @@ class ActionsClient:
             logging_utility.error("Unexpected error during action creation: %s", str(e))
             raise ValueError(f"Unexpected error: {str(e)}")
 
-    def get_action(self, action_id: str) -> ActionRead:
+    def get_action(self, action_id: str) -> ent_validator.ActionRead:
         """
         Retrieve a specific action by its ID.
         """
@@ -70,7 +74,7 @@ class ActionsClient:
             response = self.client.get(f"/v1/actions/{action_id}")
             response.raise_for_status()
             response_data = response.json()
-            validated_action = ActionRead(**response_data)
+            validated_action = ent_validator.ActionRead(**response_data)
             logging_utility.info("Action retrieved successfully with ID: %s", action_id)
             logging_utility.debug("Validated action data: %s", validated_action.model_dump(mode="json"))
             return validated_action
@@ -84,7 +88,6 @@ class ActionsClient:
             raise ValueError(f"HTTP error during action retrieval: {str(e)}")
         except ValidationError as e:
             logging_utility.error("Response validation failed: %s", str(e))
-            logging_utility.debug("Invalid response data: %s", response_data)
             raise ValueError(f"Invalid action data format: {str(e)}")
         except httpx.RequestError as e:
             error_msg = f"Request error: {str(e)}"
@@ -94,16 +97,16 @@ class ActionsClient:
             logging_utility.error("Unexpected error: %s", str(e))
             raise ValueError(f"Unexpected error: {str(e)}")
 
-    def update_action(self, action_id: str, status: ActionStatus,
-                      result: Optional[Dict[str, Any]] = None) -> ActionRead:
+    def update_action(self, action_id: str, status: ent_validator.ActionStatus,
+                      result: Optional[Dict[str, Any]] = None) -> ent_validator.ActionRead:
         """Update an action's status and result."""
         try:
-            payload = ActionUpdate(status=status, result=result).dict(exclude_none=True)
+            payload = ent_validator.ActionUpdate(status=status, result=result).dict(exclude_none=True)
             logging_utility.debug("Payload for action update: %s", payload)
             response = self.client.put(f"/v1/actions/{action_id}", json=payload)
             response.raise_for_status()
             response_data = response.json()
-            validated_action = ActionRead(**response_data)
+            validated_action = ent_validator.ActionRead(**response_data)
             logging_utility.info("Action updated successfully with ID: %s", action_id)
             return validated_action
 

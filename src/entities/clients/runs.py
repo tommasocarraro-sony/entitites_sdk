@@ -1,4 +1,3 @@
-import os
 import time
 from typing import List, Dict, Any, Optional
 
@@ -6,25 +5,49 @@ import httpx
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from ..schemas.schemas import Run, RunStatusUpdate, RunReadDetailed
 from ..services.identifier_service import IdentifierService
 from ..services.logging_service import LoggingUtility
 
 load_dotenv()
-# Initialize logging utility
 logging_utility = LoggingUtility()
+
+from entities_common import ValidationInterface
+ent_validator = ValidationInterface()
 
 
 class RunsClient:
-    def __init__(self, base_url=os.getenv("BASE_URL"), api_key=None):
+    def __init__(self, base_url: str, api_key: Optional[str] = None):
+        """
+        Initialize the RunsClient with the given base URL and optional API key.
+
+        Args:
+            base_url (str): The base URL for the runs service.
+            api_key (Optional[str]): The API key for authentication.
+        """
         self.base_url = base_url
         self.api_key = api_key
-        self.client = httpx.Client(base_url=base_url, headers={"Authorization": f"Bearer {api_key}"})
+        self.client = httpx.Client(
+            base_url=self.base_url,
+            headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+        )
         logging_utility.info("RunsClient initialized with base_url: %s", self.base_url)
 
     def create_run(self, assistant_id: str, thread_id: str, instructions: Optional[str] = "",
-                   meta_data: Optional[Dict[str, Any]] = {}) -> Run:  # Return type is now RunReadDetailed
-        run_data = Run(  # Use Pydantic model for creation
+                   meta_data: Optional[Dict[str, Any]] = {}) -> Run:
+        """
+        Create a new run using the provided assistant_id, thread_id, and instructions.
+        Returns a Run Pydantic model.
+
+        Args:
+            assistant_id (str): The assistant's ID.
+            thread_id (str): The thread's ID.
+            instructions (Optional[str]): Instructions for the run.
+            meta_data (Optional[Dict[str, Any]]): Additional metadata.
+
+        Returns:
+            Run: The created run.
+        """
+        run_data = ent_validator.Run(
             id=IdentifierService.generate_run_id(),
             assistant_id=assistant_id,
             thread_id=thread_id,
@@ -33,7 +56,7 @@ class RunsClient:
             cancelled_at=None,
             completed_at=None,
             created_at=int(time.time()),
-            expires_at=int(time.time()) + 3600,  # Set to 1 hour later
+            expires_at=int(time.time()) + 3600,  # 1 hour later
             failed_at=None,
             incomplete_details=None,
             last_error=None,
@@ -59,16 +82,13 @@ class RunsClient:
         logging_utility.debug("Run data: %s", run_data.dict())
 
         try:
-            # Send the validated data to the API
             response = self.client.post("/v1/runs", json=run_data.dict())
             response.raise_for_status()
             created_run_data = response.json()
 
-            # Validate the response data with the Pydantic model
-            validated_run = Run(**created_run_data)
+            # Validate the response using the Run model
+            validated_run = ent_validator.Run(**created_run_data)
             logging_utility.info("Run created successfully with id: %s", validated_run.id)
-
-            # Return the Pydantic model instead of the raw dictionary
             return validated_run
 
         except ValidationError as e:
@@ -81,57 +101,56 @@ class RunsClient:
             logging_utility.error("An error occurred while creating run: %s", str(e))
             raise
 
-    def retrieve_run(self, run_id: str) -> RunReadDetailed:
+    def retrieve_run(self, run_id: str) -> ent_validator.RunReadDetailed:
         """
-        Retrieve a run by ID and return the Pydantic object.
-        The Pydantic object has methods like .dict() and .json().
+        Retrieve a run by its ID and return it as a RunReadDetailed Pydantic model.
+
+        Args:
+            run_id (str): The run ID.
+
+        Returns:
+            RunReadDetailed: The retrieved run details.
         """
         logging_utility.info("Retrieving run with id: %s", run_id)
-
         try:
-            # Making the HTTP GET request to the runs endpoint
             response = self.client.get(f"/v1/runs/{run_id}")
             response.raise_for_status()
-
-            # Parsing and validating the response JSON into a Pydantic RunReadDetailed model
             run_data = response.json()
-            validated_run = RunReadDetailed(**run_data)  # Validate data using Pydantic model
-
+            validated_run = ent_validator.RunReadDetailed(**run_data)
             logging_utility.info("Run with id %s retrieved and validated successfully", run_id)
             return validated_run
 
         except ValidationError as e:
             logging_utility.error("Validation error: %s", e.json())
             raise ValueError(f"Data validation failed: {e}")
-
         except httpx.HTTPStatusError as e:
             logging_utility.error("HTTP error occurred while retrieving run: %s", str(e))
             raise
-
         except Exception as e:
             logging_utility.error("An unexpected error occurred while retrieving run: %s", str(e))
             raise
 
-    def update_run_status(self, run_id: str, new_status: str) -> Run:
-        logging_utility.info("Updating run status for run_id: %s to %s", run_id, new_status)
+    def update_run_status(self, run_id: str, new_status: str) -> ent_validator.Run:
+        """
+        Update the status of a run.
 
-        # Prepare the update data for validation
-        update_data = {
-            "status": new_status
-        }
+        Args:
+            run_id (str): The run ID.
+            new_status (str): The new status to set.
+
+        Returns:
+            Run: The updated run.
+        """
+        logging_utility.info("Updating run status for run_id: %s to %s", run_id, new_status)
+        update_data = {"status": new_status}
 
         try:
-            # Validate the update data using your RunStatusUpdate model
-            validated_data = RunStatusUpdate(**update_data)
-
-            # Send the validated data to the backend via a PUT request
+            validated_data = ent_validator.RunStatusUpdate(**update_data)
             response = self.client.put(f"/v1/runs/{run_id}/status", json=validated_data.dict())
             response.raise_for_status()
 
-            # Parse the updated run from the response JSON
             updated_run = response.json()
-            validated_run = Run(**updated_run)  # Validate/parse using your Run Pydantic model
-
+            validated_run = ent_validator.Run(**updated_run)
             logging_utility.info("Run status updated successfully")
             return validated_run
 
@@ -145,17 +164,24 @@ class RunsClient:
             logging_utility.error("An error occurred while updating run status: %s", str(e))
             raise
 
-    def list_runs(self, limit: int = 20, order: str = "asc") -> List[Run]:
+    def list_runs(self, limit: int = 20, order: str = "asc") -> List[ent_validator.Run]:
+        """
+        List runs with the given limit and order.
+
+        Args:
+            limit (int): Maximum number of runs to retrieve.
+            order (str): 'asc' or 'desc' for ordering.
+
+        Returns:
+            List[Run]: A list of runs.
+        """
         logging_utility.info("Listing runs with limit: %d, order: %s", limit, order)
-        params = {
-            "limit": limit,
-            "order": order
-        }
+        params = {"limit": limit, "order": order}
         try:
             response = self.client.get("/v1/runs", params=params)
             response.raise_for_status()
             runs = response.json()
-            validated_runs = [Run(**run) for run in runs]  # Validate data using Pydantic model
+            validated_runs = [ent_validator.Run(**run) for run in runs]
             logging_utility.info("Retrieved %d runs", len(validated_runs))
             return validated_runs
         except ValidationError as e:
@@ -169,6 +195,15 @@ class RunsClient:
             raise
 
     def delete_run(self, run_id: str) -> Dict[str, Any]:
+        """
+        Delete a run by its ID.
+
+        Args:
+            run_id (str): The run ID.
+
+        Returns:
+            Dict[str, Any]: The deletion result.
+        """
         logging_utility.info("Deleting run with id: %s", run_id)
         try:
             response = self.client.delete(f"/v1/runs/{run_id}")
@@ -184,6 +219,18 @@ class RunsClient:
             raise
 
     def generate(self, run_id: str, model: str, prompt: str, stream: bool = False) -> Dict[str, Any]:
+        """
+        Generate content for a run based on the provided model and prompt.
+
+        Args:
+            run_id (str): The run ID.
+            model (str): The model to use.
+            prompt (str): The prompt text.
+            stream (bool): Whether to stream the response.
+
+        Returns:
+            Dict[str, Any]: The generated content.
+        """
         logging_utility.info("Generating content for run_id: %s, model: %s", run_id, model)
         try:
             run = self.retrieve_run(run_id)
@@ -210,6 +257,18 @@ class RunsClient:
             raise
 
     def chat(self, run_id: str, model: str, messages: List[Dict[str, Any]], stream: bool = False) -> Dict[str, Any]:
+        """
+        Chat using a run, model, and provided messages.
+
+        Args:
+            run_id (str): The run ID.
+            model (str): The model to use.
+            messages (List[Dict[str, Any]]): The messages for context.
+            stream (bool): Whether to stream the response.
+
+        Returns:
+            Dict[str, Any]: The chat response.
+        """
         logging_utility.info("Chatting for run_id: %s, model: %s", run_id, model)
         try:
             run = self.retrieve_run(run_id)
@@ -236,16 +295,25 @@ class RunsClient:
             raise
 
     def cancel_run(self, run_id: str) -> Dict[str, Any]:
-        logging_utility.info(f"Cancelling run with id: {run_id}")
+        """
+        Cancel a run by its ID.
+
+        Args:
+            run_id (str): The run ID.
+
+        Returns:
+            Dict[str, Any]: The cancellation result.
+        """
+        logging_utility.info("Cancelling run with id: %s", run_id)
         try:
             response = self.client.post(f"/v1/runs/{run_id}/cancel")
             response.raise_for_status()
             result = response.json()
-            logging_utility.info(f"Run {run_id} cancelled successfully")
+            logging_utility.info("Run %s cancelled successfully", run_id)
             return result
         except httpx.HTTPStatusError as e:
-            logging_utility.error(f"HTTP error occurred while cancelling run {run_id}: {str(e)}")
+            logging_utility.error("HTTP error occurred while cancelling run %s: %s", run_id, str(e))
             raise
         except Exception as e:
-            logging_utility.error(f"An error occurred while cancelling run {run_id}: {str(e)}")
+            logging_utility.error("An error occurred while cancelling run %s: %s", run_id, str(e))
             raise
