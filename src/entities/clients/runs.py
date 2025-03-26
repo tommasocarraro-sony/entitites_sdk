@@ -33,7 +33,7 @@ class RunsClient:
         logging_utility.info("RunsClient initialized with base_url: %s", self.base_url)
 
     def create_run(self, assistant_id: str, thread_id: str, instructions: Optional[str] = "",
-                   meta_data: Optional[Dict[str, Any]] = {}) -> Run:
+                   meta_data: Optional[Dict[str, Any]] = {}) -> ent_validator.Run:
         """
         Create a new run using the provided assistant_id, thread_id, and instructions.
         Returns a Run Pydantic model.
