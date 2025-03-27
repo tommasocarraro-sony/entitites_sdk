@@ -15,13 +15,13 @@ from .clients.threads import ThreadsClient
 from .clients.tools import ToolsClient
 from .clients.users import UsersClient
 from .clients.files import FileClient
-from .services.logging_service import LoggingUtility
+from entities_common import UtilsInterface
 
 # Load environment variables from .env file.
 load_dotenv()
 
 # Initialize logging utility.
-logging_utility = LoggingUtility()
+logging_utility = UtilsInterface.LoggingUtility
 
 
 class Entities:

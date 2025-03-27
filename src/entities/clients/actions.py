@@ -3,12 +3,13 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 import httpx
 from dotenv import load_dotenv
-from entities_common import ValidationInterface
+from entities_common import ValidationInterface, UtilsInterface
 from pydantic import ValidationError
 validation = ValidationInterface()
 from entities_common import UtilsInterface
 utils = UtilsInterface()
-from ..services.identifier_service import IdentifierService
+
+
 load_dotenv()
 logging_utility = utils.LoggingUtility
 
@@ -30,7 +31,7 @@ class ActionsClient:
                       expires_at: Optional[datetime] = None) -> validation.ActionRead:
         """Create a new action using the provided tool_name, run_id, and function_args."""
         try:
-            action_id = IdentifierService.generate_action_id()
+            action_id = UtilsInterface.IdentifierService.generate_action_id()
             expires_at_iso = expires_at.isoformat() if expires_at else None
 
             payload = validation.ActionCreate(
