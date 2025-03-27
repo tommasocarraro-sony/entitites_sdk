@@ -5,12 +5,10 @@ import httpx
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from ..services.identifier_service import IdentifierService
-from ..services.logging_service import LoggingUtility
 
 load_dotenv()
-logging_utility = LoggingUtility()
-
+from entities_common import UtilsInterface
+logging_utility = UtilsInterface.LoggingUtility
 from entities_common import ValidationInterface
 ent_validator = ValidationInterface()
 
@@ -48,7 +46,7 @@ class RunsClient:
             Run: The created run.
         """
         run_data = ent_validator.Run(
-            id=IdentifierService.generate_run_id(),
+            id=UtilsInterface.IdentifierService.generate_run_id(),
             assistant_id=assistant_id,
             thread_id=thread_id,
             instructions=instructions,

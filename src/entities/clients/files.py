@@ -2,19 +2,14 @@ import io
 import mimetypes
 import os
 from typing import Dict, Any, Optional, BinaryIO
-
 import httpx
 from dotenv import load_dotenv
-from entities_common import ValidationInterface
+from entities_common import ValidationInterface, UtilsInterface
 from pydantic import ValidationError
-
 ent_validator = ValidationInterface()
 
-
-from ..services.logging_service import LoggingUtility
-
 load_dotenv()
-logging_utility = LoggingUtility()
+logging_utility = UtilsInterface.LoggingUtility
 
 
 class FileClient:

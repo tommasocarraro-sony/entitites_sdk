@@ -1,20 +1,16 @@
 import os
 from datetime import datetime
 from typing import Optional, Dict, Any, List
-
 import httpx
 from dotenv import load_dotenv
 from entities_common import ValidationInterface
 from pydantic import ValidationError
-
-ent_validator = ValidationInterface()
-
+validation = ValidationInterface()
+from entities_common import UtilsInterface
+utils = UtilsInterface()
 from ..services.identifier_service import IdentifierService
-from ..services.logging_service import LoggingUtility
-
 load_dotenv()
-
-logging_utility = LoggingUtility()
+logging_utility = utils.LoggingUtility
 
 
 class ActionsClient:
@@ -31,13 +27,13 @@ class ActionsClient:
         logging_utility.info("ActionsClient initialized with base_url: %s", self.base_url)
 
     def create_action(self, tool_name: str, run_id: str, function_args: Optional[Dict[str, Any]] = None,
-                      expires_at: Optional[datetime] = None) -> ent_validator.ActionRead:
+                      expires_at: Optional[datetime] = None) -> validation.ActionRead:
         """Create a new action using the provided tool_name, run_id, and function_args."""
         try:
             action_id = IdentifierService.generate_action_id()
             expires_at_iso = expires_at.isoformat() if expires_at else None
 
-            payload = ent_validator.ActionCreate(
+            payload = validation.ActionCreate(
                 id=action_id,
                 tool_name=tool_name,
                 run_id=run_id,
@@ -54,7 +50,7 @@ class ActionsClient:
             response.raise_for_status()
 
             response_data = response.json()
-            validated_action = ent_validator.ActionRead(**response_data)
+            validated_action = validation.ActionRead(**response_data)
             logging_utility.info("Action created successfully with ID: %s", action_id)
             return validated_action
 
@@ -65,7 +61,7 @@ class ActionsClient:
             logging_utility.error("Unexpected error during action creation: %s", str(e))
             raise ValueError(f"Unexpected error: {str(e)}")
 
-    def get_action(self, action_id: str) -> ent_validator.ActionRead:
+    def get_action(self, action_id: str) -> validation.ActionRead:
         """
         Retrieve a specific action by its ID.
         """
@@ -74,7 +70,7 @@ class ActionsClient:
             response = self.client.get(f"/v1/actions/{action_id}")
             response.raise_for_status()
             response_data = response.json()
-            validated_action = ent_validator.ActionRead(**response_data)
+            validated_action = validation.ActionRead(**response_data)
             logging_utility.info("Action retrieved successfully with ID: %s", action_id)
             logging_utility.debug("Validated action data: %s", validated_action.model_dump(mode="json"))
             return validated_action
@@ -97,16 +93,16 @@ class ActionsClient:
             logging_utility.error("Unexpected error: %s", str(e))
             raise ValueError(f"Unexpected error: {str(e)}")
 
-    def update_action(self, action_id: str, status: ent_validator.ActionStatus,
-                      result: Optional[Dict[str, Any]] = None) -> ent_validator.ActionRead:
+    def update_action(self, action_id: str, status: validation.ActionStatus,
+                      result: Optional[Dict[str, Any]] = None) -> validation.ActionRead:
         """Update an action's status and result."""
         try:
-            payload = ent_validator.ActionUpdate(status=status, result=result).dict(exclude_none=True)
+            payload = validation.ActionUpdate(status=status, result=result).dict(exclude_none=True)
             logging_utility.debug("Payload for action update: %s", payload)
             response = self.client.put(f"/v1/actions/{action_id}", json=payload)
             response.raise_for_status()
             response_data = response.json()
-            validated_action = ent_validator.ActionRead(**response_data)
+            validated_action = validation.ActionRead(**response_data)
             logging_utility.info("Action updated successfully with ID: %s", action_id)
             return validated_action
 

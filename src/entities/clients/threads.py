@@ -5,11 +5,10 @@ import httpx
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from ..schemas.schemas import (
-    UserCreate, UserRead, ThreadCreate, ThreadRead, ThreadUpdate,
-    ThreadIds, ThreadReadDetailed
-)
+from entities_common import ValidationInterface
 from ..services.logging_service import LoggingUtility
+
+validator = ValidationInterface()
 
 load_dotenv()
 logging_utility = LoggingUtility()
@@ -32,14 +31,14 @@ class ThreadsClient:
         )
         logging_utility.info("ThreadsClient initialized with base_url: %s", self.base_url)
 
-    def create_user(self, name: str) -> UserRead:
+    def create_user(self, name: str) -> validator.UserRead:
         logging_utility.info("Creating user with name: %s", name)
-        user_data = UserCreate(name=name).model_dump()
+        user_data = validator.UserCreate(name=name).model_dump()
         try:
             response = self.client.post("/v1/users", json=user_data)
             response.raise_for_status()
             created_user = response.json()
-            validated_user = UserRead(**created_user)
+            validated_user = validator.UserRead(**created_user)
             logging_utility.info("User created successfully with id: %s", validated_user.id)
             return validated_user
         except ValidationError as e:
@@ -54,13 +53,13 @@ class ThreadsClient:
 
     def create_thread(self, participant_ids: List[str], meta_data: Optional[Dict[str, Any]] = None) -> ThreadRead:
         meta_data = meta_data or {}
-        thread_data = ThreadCreate(participant_ids=participant_ids, meta_data=meta_data).model_dump()
+        thread_data = validator.ThreadCreate(participant_ids=participant_ids, meta_data=meta_data).model_dump()
         logging_utility.info("Creating thread with %d participants", len(participant_ids))
         try:
             response = self.client.post("/v1/threads", json=thread_data)
             response.raise_for_status()
             created_thread = response.json()
-            validated_thread = ThreadRead(**created_thread)
+            validated_thread = validator.ThreadRead(**created_thread)
             logging_utility.info("Thread created successfully with id: %s", validated_thread.id)
             return validated_thread
         except ValidationError as e:
@@ -74,13 +73,13 @@ class ThreadsClient:
             logging_utility.error("An error occurred while creating thread: %s", str(e))
             raise
 
-    def retrieve_thread(self, thread_id: str) -> ThreadRead:
+    def retrieve_thread(self, thread_id: str) -> validator.ThreadRead:
         logging_utility.info("Retrieving thread with id: %s", thread_id)
         try:
             response = self.client.get(f"/v1/threads/{thread_id}")
             response.raise_for_status()
             thread = response.json()
-            validated_thread = ThreadRead(**thread)
+            validated_thread = validator.ThreadRead(**thread)
             logging_utility.info("Thread retrieved successfully")
             return validated_thread
         except ValidationError as e:
@@ -93,14 +92,14 @@ class ThreadsClient:
             logging_utility.error("An error occurred while retrieving thread: %s", str(e))
             raise
 
-    def update_thread(self, thread_id: str, **updates) -> ThreadReadDetailed:
+    def update_thread(self, thread_id: str, **updates) -> validator.ThreadReadDetailed:
         logging_utility.info("Updating thread with id: %s", thread_id)
         try:
-            validated_updates = ThreadUpdate(**updates)
+            validated_updates = validator.ThreadUpdate(**updates)
             response = self.client.post(f"/v1/threads/{thread_id}", json=validated_updates.model_dump())
             response.raise_for_status()
             updated_thread = response.json()
-            return ThreadReadDetailed(**updated_thread)
+            return validator.ThreadReadDetailed(**updated_thread)
         except httpx.HTTPStatusError as e:
             logging_utility.error("HTTP error occurred while updating thread: %s", str(e))
             logging_utility.error("Response content: %s", e.response.content)
@@ -109,7 +108,7 @@ class ThreadsClient:
             logging_utility.error("An error occurred while updating thread: %s", str(e))
             raise
 
-    def update_thread_metadata(self, thread_id: str, new_metadata: Dict[str, Any]) -> ThreadRead:
+    def update_thread_metadata(self, thread_id: str, new_metadata: Dict[str, Any]) -> validator.ThreadRead:
         logging_utility.info("Updating metadata for thread with id: %s", thread_id)
         try:
             thread = self.retrieve_thread(thread_id)
@@ -132,7 +131,7 @@ class ThreadsClient:
             response = self.client.get(f"/v1/users/{user_id}/threads")
             response.raise_for_status()
             thread_ids = response.json()
-            validated_thread_ids = ThreadIds(**thread_ids)
+            validated_thread_ids = validator.ThreadIds(**thread_ids)
             logging_utility.info("Retrieved %d thread ids", len(validated_thread_ids.thread_ids))
             return validated_thread_ids.thread_ids
         except ValidationError as e:

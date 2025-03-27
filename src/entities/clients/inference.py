@@ -5,19 +5,13 @@ from typing import Optional, AsyncGenerator
 
 import httpx
 from dotenv import load_dotenv
-from entities_common import ValidationInterface
+from entities_common import ValidationInterface, UtilsInterface
 from pydantic import ValidationError
 
 ent_validator = ValidationInterface()
 
-
-
-
-
-from ..services.logging_service import LoggingUtility
-
 load_dotenv()
-logging_utility = LoggingUtility()
+logging_utility = UtilsInterface.LoggingUtility
 
 
 class InferenceClient:

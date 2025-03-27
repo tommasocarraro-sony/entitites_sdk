@@ -5,16 +5,13 @@ import httpx
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-
-from ..services.logging_service import LoggingUtility
-
-from entities_common import ValidationInterface
+from entities_common import ValidationInterface, UtilsInterface
 ent_validator = ValidationInterface()
 
 
 load_dotenv()
 # Initialize logging utility
-logging_utility = LoggingUtility()
+logging_utility = UtilsInterface.LoggingUtility
 
 
 class UsersClient:

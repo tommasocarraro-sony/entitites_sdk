@@ -2,16 +2,15 @@ from typing import List, Dict, Any, Optional
 
 import httpx
 from dotenv import load_dotenv
-from entities_common import ValidationInterface
+from entities_common import ValidationInterface,UtilsInterface
 from pydantic import ValidationError
 
-from ..services.logging_service import LoggingUtility
 
 ent_validator = ValidationInterface()
 
 
 load_dotenv()
-logging_utility = LoggingUtility()
+logging_utility = UtilsInterface.LoggingUtility
 
 
 class MessagesClient:
