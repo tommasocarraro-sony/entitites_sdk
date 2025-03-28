@@ -11,7 +11,9 @@ from pydantic import ValidationError
 ent_validator = ValidationInterface()
 
 load_dotenv()
-logging_utility = UtilsInterface.LoggingUtility
+from entities_common.services.logging_service import LoggingUtility
+
+logging_utility = UtilsInterface.LoggingUtility()
 
 
 class InferenceClient:

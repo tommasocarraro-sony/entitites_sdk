@@ -21,8 +21,11 @@ from entities_common import UtilsInterface
 load_dotenv()
 
 # Initialize logging utility.
-logging_utility = UtilsInterface.LoggingUtility
+logging_utility = UtilsInterface.LoggingUtility()
 
+from entities_common.services.logging_service import LoggingUtility
+
+logging_utility = LoggingUtility()
 
 class Entities:
     def __init__(

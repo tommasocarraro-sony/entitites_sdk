@@ -13,8 +13,7 @@ ent_validator = ValidationInterface()
 # Load environment variables
 load_dotenv()
 
-# Initialize logging utility
-logging_utility = UtilsInterface.LoggingUtility
+logging_utility = UtilsInterface.LoggingUtility()
 
 
 class AssistantsClientError(Exception):

@@ -1,16 +1,14 @@
-import os
 from typing import List, Dict, Any, Optional
 
 import httpx
 from dotenv import load_dotenv
-from pydantic import ValidationError
-
 from entities_common import ValidationInterface, UtilsInterface
+from pydantic import ValidationError
 
 validator = ValidationInterface()
 
 load_dotenv()
-logging_utility = UtilsInterface.LoggingUtility
+logging_utility = UtilsInterface.LoggingUtility()
 
 
 class ThreadsClient:
