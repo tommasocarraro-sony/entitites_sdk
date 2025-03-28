@@ -74,7 +74,7 @@ The Entities API [Threads](/docs/threads.md)  endpoint simplifies dialogue manag
 ## Install
 
 ```sh
-tbc
+pip install https://github.com/frankie336/entitites_sdk.git
 ```
 
 ## Quick Start

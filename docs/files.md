@@ -57,3 +57,41 @@ Whether uploading training data, referencing a code snippet, or viewing the outp
 | `.mp4`    | video/mp4 |
 | `.wav`    | audio/wav |
 | `.ogg`    | audio/ogg |
+
+
+## Use
+
+
+**Upload a file**
+
+```python
+
+upload = client.files.upload_file(
+    file_path=file_path, user_id=user.id, purpose="assistants")
+
+```
+
+**Generate a signed URL for a file**
+
+```python
+
+file_url = client.files.get_signed_url(
+    upload.id, label=filename, markdown=False)
+
+```
+Generates:
+
+```plaintext
+print(url)
+
+http://localhost:9000/v1/files/download?file_id=file_rxW1Vo7BgEKDqB8Lx7mN2f&expires=1711657200&signature=9a3044a1fdf5ff54a9851785c8d6dc7b90c3c438e1793f1e7f395cc7fc6b2bfc
+
+If you set markdown=True, the output would instead be:
+
+[plot.png](<http://localhost:9000/v1/files/download?file_id=file_rxW1Vo7BgEKDqB8Lx7mN2f&expires=1711657200&signature=9a3044a1fdf5ff54a9851785c8d6dc7b90c3c438e1793f1e7f395cc7fc6b2bfc>)
+
+
+
+```
+
+
