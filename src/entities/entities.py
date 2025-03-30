@@ -16,16 +16,13 @@ from .clients.tools import ToolsClient
 from .clients.users import UsersClient
 from .clients.files import FileClient
 from entities_common import UtilsInterface
+from .clients.event_monitoring import RunMonitorClient
 
 # Load environment variables from .env file.
 load_dotenv()
 
 # Initialize logging utility.
 logging_utility = UtilsInterface.LoggingUtility()
-
-from entities_common.services.logging_service import LoggingUtility
-
-logging_utility = LoggingUtility()
 
 class Entities:
     def __init__(
@@ -52,7 +49,10 @@ class Entities:
         self._tool_service: Optional[ToolsClient] = None
         self._thread_service: Optional[ThreadsClient] = None
         self._messages_client: Optional[MessagesClient] = None
+
         self._runs_client: Optional[RunsClient] = None
+        self._runs_monitor_client: Optional[RunMonitorClient] = None
+
         self._actions_client: Optional[ActionsClient] = None
         self._inference_client: Optional[InferenceClient] = None
         self._file_client: Optional[FileClient] = None
@@ -88,11 +88,18 @@ class Entities:
             self._messages_client = MessagesClient(base_url=self.base_url, api_key=self.api_key)
         return self._messages_client
 
+
     @property
     def runs(self) -> RunsClient:
         if self._runs_client is None:
             self._runs_client = RunsClient(base_url=self.base_url, api_key=self.api_key)
         return self._runs_client
+
+    @property
+    def runs_monitor(self) -> RunMonitorClient:
+        if self._runs_monitor_client is None:
+            self._runs_monitor_client = RunMonitorClient(base_url=self.base_url, api_key=self.api_key)
+        return self._runs_monitor_client
 
     @property
     def actions(self) -> ActionsClient:
