@@ -4,7 +4,6 @@ from typing import Callable, Optional, Any, List, Dict
 
 from entities.constants.platform import ACTION_REQUIRED_STATUS, TERMINAL_STATUSES
 
-
 class HttpRunMonitor:
     """
     Monitors the lifecycle of a run using the HTTP-based SDK clients (RunsClient + ActionsClient).
@@ -48,6 +47,10 @@ class HttpRunMonitor:
         self._stop_event.set()
         if self._monitor_thread:
             self._monitor_thread.join()
+
+    def is_active(self) -> bool:
+        """Return True if the monitor thread is active and running."""
+        return self._monitor_thread is not None and self._monitor_thread.is_alive() and not self._stop_event.is_set()
 
     def _monitor_loop(self):
         time.sleep(self.initial_delay)

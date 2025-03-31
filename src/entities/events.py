@@ -1,14 +1,16 @@
 from entities.utils.run_monitor import HttpRunMonitor
+from entities.utils.monitor_launcher import MonitorLauncher
 
 class EventsInterface:
     """
-    Exposes Pydantic validation classes, retaining their original naming.
+    Exposes core event monitoring utilities for tracking assistant run lifecycle events.
 
-    This interface allows consumers to access the various schemas like:
-        - ValidationInterface.FileUploadRequest
-        - ValidationInterface.ActionCreate
-        - etc.
+    This interface includes:
+
+    - `HttpRunMonitor`: Low-level polling monitor for observing status changes and triggering callbacks.
+    - `MonitorLauncher`: Threaded utility that simplifies asynchronous monitoring with default logging callbacks.
+
+    These can be used to handle events such as `status_change`, `action_required`, `complete`, and `error` during the execution of a run.
     """
-
-    # Actions schemas
     HttpRunMonitor = HttpRunMonitor
+    MonitorLauncher = MonitorLauncher
