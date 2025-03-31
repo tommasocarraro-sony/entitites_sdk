@@ -135,7 +135,8 @@ class Entities:
     def vectors(self) -> VectorStoreClient:
         if self._vectors_client is None:
             self._vectors_client = VectorStoreClient(base_url=self.base_url, api_key=self.api_key)
-        return self._vectors_client
+
+        return  self._vectors_client
 
     @property
     def run_monitor(self) -> HttpRunMonitor:
