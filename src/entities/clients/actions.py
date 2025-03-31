@@ -9,13 +9,8 @@ from entities_common import ValidationInterface
 from pydantic import ValidationError
 
 validation = ValidationInterface()
-
-
-load_dotenv()
-
-from entities_common.services.logging_service import LoggingUtility
-
 logging_utility = UtilsInterface.LoggingUtility()
+load_dotenv()
 
 
 class ActionsClient:
