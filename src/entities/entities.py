@@ -15,6 +15,8 @@ from .clients.threads import ThreadsClient
 from .clients.tools import ToolsClient
 from .clients.users import UsersClient
 from .clients.files import FileClient
+from .clients.vectors import VectorStoreClient
+
 from .utils.run_monitor import HttpRunMonitor
 from entities_common import UtilsInterface
 
@@ -55,6 +57,7 @@ class Entities:
         self._actions_client: Optional[ActionsClient] = None
         self._inference_client: Optional[InferenceClient] = None
         self._file_client: Optional[FileClient] = None
+        self._vectors_client: Optional[VectorStoreClient] = None
 
         self._synchronous_inference_stream: Optional[SynchronousInferenceStream] = None
 
@@ -121,11 +124,18 @@ class Entities:
             self._synchronous_inference_stream = SynchronousInferenceStream(self.inference)
         return self._synchronous_inference_stream
 
+
     @property
     def files(self) -> FileClient:
         if self._file_client is None:
             self._file_client = FileClient(base_url=self.base_url, api_key=self.api_key)
         return self._file_client
+
+    @property
+    def vectors(self) -> VectorStoreClient:
+        if self._vectors_client is None:
+            self._vectors_client = VectorStoreClient(base_url=self.base_url, api_key=self.api_key)
+        return self._vectors_client
 
     @property
     def run_monitor(self) -> HttpRunMonitor:
