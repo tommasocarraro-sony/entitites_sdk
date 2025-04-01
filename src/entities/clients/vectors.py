@@ -1,13 +1,13 @@
+import asyncio
 import os
 import time
-import uuid
-import asyncio
 from pathlib import Path
 from typing import List, Dict, Optional, Any, Union
 
 import httpx
 from dotenv import load_dotenv
 from entities_common import ValidationInterface
+
 from entities.clients.file_processor import FileProcessor
 from entities.clients.vector_store_manager import VectorStoreManager
 from entities.services.logging_service import LoggingUtility
