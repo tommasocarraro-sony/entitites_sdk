@@ -1,15 +1,17 @@
 import asyncio
 import re
-
-import pdfplumber
-import validators
+import csv
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Union, List, Tuple
+
 import numpy as np
+import pdfplumber
+import validators
 from sentence_transformers import SentenceTransformer
-from entities.services.logging_service import LoggingUtility
+
+from entities_common.utilities.logging_service import LoggingUtility
 
 logging_utility = LoggingUtility()
 
@@ -25,7 +27,6 @@ class FileProcessor:
         self.effective_max_length = self.max_seq_length - self.special_tokens_count
         self.chunk_size = min(chunk_size, self.effective_max_length * 4)
         logging_utility.info("Initialized optimized FileProcessor")
-
 
     def validate_file(self, file_path: Path):
         """Pre-process validation checks"""
@@ -94,7 +95,7 @@ class FileProcessor:
                             current_length = 0
 
                         # Handle oversized line
-                        chunks = self._split_oversized_line(line)
+                        chunks = self._split_oversized_chunk(line)
                         for chunk in chunks:
                             all_chunks.append(chunk)
                             chunk_line_data.append({
@@ -136,7 +137,7 @@ class FileProcessor:
     async def _process_text(self, file_path: Path) -> Dict[str, Any]:
         """Process text with proper async handling"""
         try:
-            text = await self._extract_text(file_path)
+            text, extra_meta, _ = await self._extract_text(file_path)
             chunks = self._chunk_text(text)
 
             vectors = await asyncio.gather(*[
@@ -149,7 +150,8 @@ class FileProcessor:
                 "metadata": {
                     "type": "text",
                     "source": str(file_path),
-                    "chunks": len(chunks)
+                    "chunks": len(chunks),
+                    **extra_meta
                 },
                 "vectors": [v.tolist() for v in vectors],
                 "chunks": chunks
@@ -206,7 +208,6 @@ class FileProcessor:
                 page.flush_cache()
 
         return page_chunks, metadata
-
 
     def _read_text_file(self, file_path: Path) -> str:
         """Read text files with encoding fallback"""
@@ -300,8 +301,7 @@ class FileProcessor:
 
         return chunks
 
-    def _generate_chunk_metadata(self, processed_data: dict, chunk_idx: int,
-                                 doc_metadata: dict) -> dict:
+    def _generate_chunk_metadata(self, processed_data: dict, chunk_idx: int, doc_metadata: dict) -> dict:
         """Generate metadata with page numbers"""
         chunk_text = processed_data['chunks'][chunk_idx]
         page_number = processed_data['page_numbers'][chunk_idx]
@@ -351,6 +351,61 @@ class FileProcessor:
         except:
             return None
 
+    def process_csv_dynamic(self, file_path: Union[str, Path], text_field: str = "description") -> Dict[str, Any]:
+        """
+        Process a CSV file dynamically and vectorize the text in the specified text_field.
+        All other columns in the CSV will be used as metadata without being tailored
+        to any specific use case.
+
+        Parameters:
+          file_path: Path to the CSV file.
+          text_field: The column name containing the text to be embedded.
+
+        Returns:
+          A dictionary with:
+            - documents: A list of dictionaries, each with "text" and "metadata" keys.
+            - vectors: A list of embedding vectors (as lists) corresponding to each document.
+        """
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"CSV file {file_path} not found")
+
+        documents: List[Dict[str, Any]] = []
+        texts: List[str] = []
+
+        with file_path.open(newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                text = row.get(text_field, "").strip()
+                if not text:
+                    continue  # Skip rows without text
+
+                # Build metadata dynamically using all columns except the text field.
+                metadata = {k: v.strip() for k, v in row.items() if k != text_field and v}
+
+                documents.append({
+                    "text": text,
+                    "metadata": metadata
+                })
+                texts.append(text)
+
+        if texts:
+            vectors = self.embedding_model.encode(
+                texts,
+                convert_to_numpy=True,
+                truncate='model_max_length',
+                normalize_embeddings=True,
+                show_progress_bar=True  # Optional: disable in production
+            )
+            vector_list = [v.tolist() for v in vectors]
+        else:
+            vector_list = []
+
+        return {
+            "documents": documents,
+            "vectors": vector_list
+        }
+
     def process_and_store(self,
                           file_path: Union[str, Path],
                           destination_store: str,
@@ -358,7 +413,6 @@ class FileProcessor:
                           user_metadata: dict = None,
                           source_url: str = None) -> dict:
         """Process documents with metadata support"""
-        # Convert to Path immediately (CRITICAL FIX)
         file_path = Path(file_path)
 
         metadata = user_metadata.copy() if user_metadata else {}
@@ -368,7 +422,7 @@ class FileProcessor:
         try:
             processed = asyncio.run(
                 self._async_process_and_store(
-                    file_path,  # Now a Path object
+                    file_path,
                     destination_store,
                     vector_service,
                     metadata
@@ -385,10 +439,10 @@ class FileProcessor:
             raise
 
     async def _async_process_and_store(self,
-                                      file_path: Path,
-                                      destination_store: str,
-                                      vector_service,
-                                      doc_metadata: dict):
+                                       file_path: Path,
+                                       destination_store: str,
+                                       vector_service,
+                                       doc_metadata: dict):
         """Process and store with page tracking"""
         processed = await self.process_file(file_path)
         chunk_metadata = [

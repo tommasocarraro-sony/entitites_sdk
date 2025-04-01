@@ -6,22 +6,31 @@ from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
 
-from entities.services.logging_service import LoggingUtility
+from entities_common.utilities.logging_service import LoggingUtility
 from .base_vector_store import BaseVectorStore, StoreExistsError, StoreNotFoundError, VectorStoreError
 
 load_dotenv()
 logging_utility = LoggingUtility()
 
+
 class VectorStoreManager(BaseVectorStore):
-    def __init__(self, host: str = "localhost", port: int = 6333):
-        self.client = QdrantClient(host=host, port=port)
+
+    def __init__(self, vector_store_host: str = 'localhost', port: int = 6333):
+
+        self.vector_store_host = vector_store_host
+        self.client = QdrantClient(host=self.vector_store_host, port=port)
         self.active_stores: Dict[str, dict] = {}
         logging_utility.info(f"Initialized HTTP-based VectorStoreManager. Source: {__file__}")
 
     def _generate_vector_id(self) -> str:
         return str(uuid.uuid4())
 
-    def create_store(self, store_name: str, vector_size: int = 384, distance: str = "COSINE") -> dict:
+    def create_store(self,
+                     store_name: str,
+                     collection_name,
+                     vector_size: int = 384,
+                     distance: str = "COSINE") -> dict:
+
         if store_name in self.active_stores:
             raise StoreExistsError(f"Store {store_name} exists")
         try:
@@ -69,10 +78,19 @@ class VectorStoreManager(BaseVectorStore):
             logging_utility.error(f"Add to store failed: {str(e)}")
             raise VectorStoreError(f"Insertion failed: {str(e)}")
 
-    def query_store(self, store_name: str, query_vector: List[float],
-                    top_k: int = 5, filters: Optional[dict] = None,
-                    score_threshold: float = 0.0, offset: int = 0,
-                    limit: Optional[int] = None) -> List[dict]:
+    def query_store(
+            self,
+            store_name: str,
+            query_vector: List[float],
+            top_k: int = 5,
+            filters: Optional[dict] = None,
+            score_threshold: float = 0.0,
+            offset: int = 0,
+            limit: Optional[int] = None,
+            score_boosts: Optional[Dict[str, float]] = None,
+            search_type: Optional[str] = None,
+            explain: bool = False
+    ) -> List[dict]:
         # Default limit to top_k if not provided.
         if limit is None:
             limit = top_k
@@ -82,6 +100,14 @@ class VectorStoreManager(BaseVectorStore):
                 flt = Filter(must=[
                     FieldCondition(key=filters["key"], match=MatchValue(value=filters["value"]))
                 ])
+            # Prepare extra parameters for the search request.
+            extra_params = {}
+            if score_boosts is not None:
+                extra_params["score_boosts"] = score_boosts
+            if search_type is not None:
+                extra_params["search_type"] = search_type
+            extra_params["explain"] = explain
+
             results = self.client.search(
                 collection_name=store_name,
                 query_vector=query_vector,
@@ -90,7 +116,8 @@ class VectorStoreManager(BaseVectorStore):
                 offset=offset,
                 with_payload=True,
                 with_vectors=False,
-                query_filter=flt
+                query_filter=flt,
+                **extra_params
             )
             return [{
                 "id": r.id,

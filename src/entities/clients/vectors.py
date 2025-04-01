@@ -6,11 +6,12 @@ from typing import List, Dict, Optional, Any, Union
 
 import httpx
 from dotenv import load_dotenv
-from entities_common import ValidationInterface
 
-from entities.clients.file_processor import FileProcessor
-from entities.clients.vector_store_manager import VectorStoreManager
-from entities.services.logging_service import LoggingUtility
+from entities_common.validation import ValidationInterface
+from entities_common.clients.vector_store_manager import VectorStoreManager
+from entities_common.utilities.file_processor import FileProcessor
+from entities_common.utils import IdentifierService
+from entities_common.utilities.logging_service import LoggingUtility
 
 load_dotenv()
 logging_utility = LoggingUtility()
@@ -20,14 +21,18 @@ class VectorStoreClientError(Exception):
     pass
 
 class VectorStoreClient:
-    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None):
+    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None,
+                 vector_store_host: Optional[str] = 'localhost'):
+
         self.base_url = base_url or os.getenv("BASE_URL")
         self.api_key = api_key or os.getenv("API_KEY")
         if not self.base_url:
             raise VectorStoreClientError("BASE_URL must be provided either as an argument or in environment variables.")
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
         self.api_client = httpx.Client(base_url=self.base_url, headers=headers)
-        self.vector_manager = VectorStoreManager()
+        self.vector_store_host = vector_store_host
+        self.vector_manager = VectorStoreManager(vector_store_host=self.vector_store_host)
+
 
     def close(self):
         self.api_client.close()
@@ -55,14 +60,14 @@ class VectorStoreClient:
                 raise
 
     def process_and_upload_file(
-        self,
-        file_path: Union[str, Path],
-        store_name: str,
-        user_metadata: Optional[Dict[str, Any]] = None,
-        source_url: Optional[str] = None,
-        embedding_model_name: str = "paraphrase-MiniLM-L6-v2",
-        chunk_size: int = 512,
-        log_to_backend: bool = True
+            self,
+            file_path: Union[str, Path],
+            store_name: str,
+            user_metadata: Optional[Dict[str, Any]] = None,
+            source_url: Optional[str] = None,
+            embedding_model_name: str = "paraphrase-MiniLM-L6-v2",
+            chunk_size: int = 512,
+            log_to_backend: bool = True
     ) -> Dict[str, Any]:
         """
         Preprocess a document (PDF or text), generate embeddings, upload them
@@ -82,19 +87,22 @@ class VectorStoreClient:
               - store_name: The target collection.
               - chunks_processed: Number of chunks processed.
               - qdrant: Result from Qdrant upload.
-              - db: Backend DB sync response.
+              - db: Backend DB sync response (if enabled).
         """
+        # Convert file path to Path object
         file_path = Path(file_path)
         file_processor = FileProcessor(chunk_size=chunk_size)
-        vector_store = VectorStoreManager()
+        vector_store = VectorStoreManager()  # Assumes VectorStoreManager is imported and configured
 
-        # Step 1: Preprocess and embed the file.
+        # Step 1: Preprocess and embed the file asynchronously.
         processed = asyncio.run(file_processor.process_file(file_path))
 
-        # Step 2: Prepare metadata.
+        # Step 2: Prepare metadata by merging user-provided metadata and source URL.
         doc_metadata = user_metadata.copy() if user_metadata else {}
         if source_url:
             doc_metadata["url"] = source_url
+
+        # Generate chunk-level metadata. This uses our internal helper.
         chunk_metadata = [
             file_processor._generate_chunk_metadata(processed, idx, doc_metadata)
             for idx in range(processed["metadata"]["chunks"])
@@ -108,12 +116,12 @@ class VectorStoreClient:
             metadata=chunk_metadata
         )
 
-        # Step 4: Sync with backend (if enabled).
+        # Step 4: Optionally sync with backend.
         db_result = None
         if log_to_backend:
             db_payload = {
                 "name": store_name,
-                "user_id": "generated_or_provided",  # Adjust as needed.
+                "user_id": "generated_or_provided",  # Adjust as needed
                 "vector_size": processed.get("vector_size", 384),
                 "distance_metric": "COSINE",
                 "config": "{}",
@@ -121,7 +129,9 @@ class VectorStoreClient:
                 "vectors": processed["vectors"],
                 "metadata": chunk_metadata
             }
-            db_response = self._request_with_retries("POST", f"/v1/vector-stores/{store_name}/add", json=db_payload)
+            db_response = self._request_with_retries(
+                "POST", f"/v1/vector-stores/{store_name}/add", json=db_payload
+            )
             db_result = self._parse_response(db_response)
 
         return {
@@ -131,20 +141,37 @@ class VectorStoreClient:
             "db": db_result
         }
 
+
     def create_vector_store(
-        self, name: str, user_id: str, vector_size: int = 384,
-        distance_metric: str = "COSINE", config: Optional[Dict[str, Any]] = None
-    ) -> ValidationInterface.VectorStoreRead:
+        self, name: str,
+            user_id: str,
+            collection_name: str,
+            vector_size: int = 384,
+            distance_metric: str = "COSINE", config: Optional[Dict[str, Any]] = None
+         ) -> ValidationInterface.VectorStoreRead:
         # Qdrant operation.
-        qdrant_result = self.vector_manager.create_store(name, vector_size, distance_metric)
-        # DB sync payload.
+
+        shared_id = IdentifierService.generate_vector_id()
+
+        collection_name = shared_id
+
+        qdrant_result = self.vector_manager.create_store(
+            store_name=name,
+            collection_name=collection_name,
+            vector_size=vector_size,
+            distance=distance_metric
+        )
+
         db_payload = {
+            "shared_id": shared_id,
             "name": name,
             "user_id": user_id,
             "vector_size": vector_size,
             "distance_metric": distance_metric,
-            "config": config
+            "config": config,
+            "collection_name": collection_name,  # ← ADD THIS
         }
+
         db_response = self._request_with_retries("POST", "/v1/vector-stores", json=db_payload)
         response_data = self._parse_response(db_response)
         return ValidationInterface.VectorStoreRead.model_validate(response_data)
@@ -169,21 +196,31 @@ class VectorStoreClient:
         }
 
     def search_vector_store(
-        self, store_name: str, query_vector: List[float],
-        top_k: int = 5, page: int = 1, page_size: int = 10,
-        score_threshold: float = 0.0
+            self, store_name: str, query_vector: List[float],
+            top_k: int = 5, page: int = 1, page_size: int = 10,
+            score_threshold: float = 0.0, filters: Optional[Dict] = None,
+            score_boosts: Optional[Dict[str, float]] = None, search_type: Optional[str] = None,
+            explain: bool = False
     ) -> Dict[str, Any]:
         offset = (page - 1) * page_size
-        # Qdrant operation.
+        # Pass the extra parameters to the underlying query (update your vector_manager.query_store accordingly)
         qdrant_result = self.vector_manager.query_store(
             store_name=store_name,
             query_vector=query_vector,
             top_k=top_k,
             score_threshold=score_threshold,
             offset=offset,
-            limit=page_size
+            limit=page_size,
+            filters=filters,
+            score_boosts=score_boosts,
+            search_type=search_type,
+            explain=explain
+
+
         )
-        # DB sync call (for auditing/monitoring).
+
+
+
         params = {
             "query_text": "query hidden from SDK here",
             "top_k": top_k,
@@ -236,3 +273,17 @@ class VectorStoreClient:
     def get_stores_by_user(self, user_id: str) -> List[Any]:
         response = self._request_with_retries("GET", f"/v1/users/{user_id}/vector-stores")
         return self._parse_response(response)
+
+    def retrieve_vector_store_by_collection(self, collection_name: str) -> ValidationInterface.VectorStoreRead:
+        """
+        Retrieve a vector store by its unique collection name.
+
+        Args:
+            collection_name (str): The internal unique ID used to represent the Qdrant collection.
+
+        Returns:
+            ValidationInterface.VectorStoreRead: Pydantic object representing the vector store metadata.
+        """
+        response = self._request_with_retries("GET", f"/v1/vector-stores/collection/{collection_name}")
+        data = self._parse_response(response)
+        return ValidationInterface.VectorStoreRead.model_validate(data)
