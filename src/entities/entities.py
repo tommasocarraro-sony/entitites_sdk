@@ -32,7 +32,7 @@ class Entities:
         self,
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
-        available_functions: Optional[Dict[str, Any]] = None
+
     ):
         """
         Initialize the main client with configuration.
@@ -138,8 +138,3 @@ class Entities:
 
         return  self._vectors_client
 
-    @property
-    def run_monitor(self) -> HttpRunMonitor:
-        if self._run_monitor is None:
-            self._run_monitor = FileClient(base_url=self.base_url, api_key=self.api_key)
-        return self._run_monitor

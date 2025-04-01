@@ -31,7 +31,8 @@ setup(
         "anyio", "certifi", "h11", "httpcore", "httpx", "idna", "sniffio",
         "fastapi", "databases", "uvicorn", "sqlalchemy",
         "pydantic", "starlette", "asgiref", "click", "pymysql", "cryptography",
-        "typing_extensions", "python-dotenv",
+        "typing_extensions", "python-dotenv",'sentence_transformers', 'SentenceTransformer',
+        'validators', 'pdfplumber', 'asyncio'
     ],
     extras_require={
         "dev": ["pytest"],
