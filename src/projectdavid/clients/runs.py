@@ -471,6 +471,7 @@ class RunsClient(BaseAPIClient):
                     logging_utility.info(
                         f"[SDK Helper] Run {run_id} reached terminal state '{current_status_str}'. Stopping wait."
                     )
+                    logging_utility.info("Let's see if we arrive here!")
                     return False  # Stop if run finished/failed
                 elif current_status_str not in transient_states:
                     logging_utility.warning(
