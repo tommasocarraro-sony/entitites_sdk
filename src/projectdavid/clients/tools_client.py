@@ -275,12 +275,12 @@ class ToolsClient(BaseAPIClient):
             response = self.client.get(url)
             response.raise_for_status()
             tools_list = response.json()
-            logging_utility.info("Fetched tool list: %s", tools_list)
+            # logging_utility.info("Fetched tool list: %s", tools_list)
             tools = tools_list["tools"]
-            logging_utility.info("Retrieved %d tools", len(tools))
+            # logging_utility.info("Retrieved %d tools", len(tools))
             if restructure:
                 restructured_tools = self.restructure_tools(tools)
-                logging_utility.info("Restructured tools: %s", restructured_tools)
+                # logging_utility.info("Restructured tools: %s", restructured_tools)
                 return restructured_tools
             else:
                 return tools

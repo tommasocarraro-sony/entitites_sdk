@@ -237,9 +237,9 @@ class MessagesClient(BaseAPIClient):
                     0, {"role": "system", "content": system_message}
                 )
                 logging_utility.debug("Inserted new system message: %s", system_message)
-            logging_utility.info(
-                "Formatted messages after insertion: %s", formatted_messages
-            )
+            # logging_utility.info(
+            #     "Formatted messages after insertion: %s", formatted_messages
+            # )
             logging_utility.info(
                 "Retrieved %d formatted messages", len(formatted_messages)
             )
