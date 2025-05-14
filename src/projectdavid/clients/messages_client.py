@@ -212,7 +212,7 @@ class MessagesClient(BaseAPIClient):
             List[Dict[str, Any]]: The formatted list of messages.
         """
         logging_utility.info("Getting formatted messages for thread_id: %s", thread_id)
-        logging_utility.info("Using system message: %s", system_message)
+        # logging_utility.info("Using system message: %s", system_message)
         try:
             response = self.client.get(f"/v1/threads/{thread_id}/formatted_messages")
             response.raise_for_status()
@@ -229,9 +229,9 @@ class MessagesClient(BaseAPIClient):
                         raise ValueError(f"Malformed tool message: {msg}")
             if formatted_messages and formatted_messages[0].get("role") == "system":
                 formatted_messages[0]["content"] = system_message
-                logging_utility.debug(
-                    "Replaced existing system message with: %s", system_message
-                )
+                # logging_utility.debug(
+                #     "Replaced existing system message with: %s", system_message
+                # )
             else:
                 formatted_messages.insert(
                     0, {"role": "system", "content": system_message}
