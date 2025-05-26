@@ -89,7 +89,7 @@ class SynchronousInferenceStream:
                 break
             except Exception as e:
                 logging_utility.error(
-                    "Unexpected error during streaming completions: %s", e if e else repr(e)
+                    "Unexpected error during streaming completions: %r", e
                 )
                 break
 
