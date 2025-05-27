@@ -87,9 +87,9 @@ class SynchronousInferenceStream:
                     "[TimeoutError] Timeout occurred, stopping stream."
                 )
                 break
-            except Exception as e:
-                logging_utility.error(
-                    "Unexpected error during streaming completions: %r", e
+            except Exception:
+                logging_utility.exception(
+                    "Unexpected error during streaming completions"
                 )
                 break
 
