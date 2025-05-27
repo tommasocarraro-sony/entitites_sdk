@@ -551,11 +551,11 @@ class RunsClient(BaseAPIClient):
 
                     # --- Optional: Update Run Status ---
                     # Backend might do this automatically, but updating here ensures client knows
-                    # try:
-                    #      self.update_run_status(run_id=run_id, new_status=StatusEnum.processing.value)
-                    #      logging_utility.info(f"[SDK Helper] Run {run_id} status updated to '{StatusEnum.processing.value}'.")
-                    # except Exception as e:
-                    #      logging_utility.warning(f"[SDK Helper] Failed to update run status after submitting output for {action_id}: {e}")
+                    try:
+                         self.update_run_status(run_id=run_id, new_status=StatusEnum.processing.value)
+                         logging_utility.info(f"[SDK Helper] Run {run_id} status updated to '{StatusEnum.processing.value}'.")
+                    except Exception as e:
+                         logging_utility.warning(f"[SDK Helper] Failed to update run status after submitting output for {action_id}: {e}")
                     # --- End Optional Status Update ---
 
                     action_handled_successfully = True
